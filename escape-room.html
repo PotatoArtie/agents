@@ -26,17 +26,17 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .nav-btn:hover{background:rgba(40,0,0,0.95);color:#7a2828}
 .nav-btn:active{background:rgba(60,0,0,0.95)}
 .hover-tip{position:absolute;background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:8px;padding:4px 8px;pointer-events:none;z-index:26;display:none;white-space:nowrap}
-.code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:16px;z-index:40;width:min(220px,85vw);border-radius:4px}
+.code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:12px;z-index:40;width:min(200px,75vw);border-radius:4px;max-height:90%;overflow-y:auto}
 .code-modal.open{display:block}
-.code-title{color:#6b0000;font-size:clamp(8px,2.2vw,10px);text-align:center;margin-bottom:12px;font-family:inherit}
-.code-display{background:#0a0a0a;border:1px solid #1e0000;color:#8a6060;font-family:inherit;font-size:clamp(14px,4vw,18px);text-align:center;padding:8px;margin-bottom:12px;letter-spacing:6px;min-height:36px;display:flex;align-items:center;justify-content:center}
-.code-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px}
-.num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(14px,4vw,16px);padding:clamp(10px,3vw,12px);cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
+.code-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:6px}
+.num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(12px,3.5vw,14px);padding:clamp(6px,2vw,10px);cursor:pointer;min-height:36px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
+.code-title{color:#6b0000;font-size:clamp(7px,2vw,9px);text-align:center;margin-bottom:8px;font-family:inherit}
+.code-display{background:#0a0a0a;border:1px solid #1e0000;color:#8a6060;font-family:inherit;font-size:clamp(12px,3.5vw,16px);text-align:center;padding:6px;margin-bottom:8px;letter-spacing:4px;min-height:30px;display:flex;align-items:center;justify-content:center}
 .num-btn:hover{background:#1a1a1a}
 .num-btn:active{background:#2a0000}
 .num-btn.zero{grid-column:2}
-.code-actions{display:flex;gap:4px;margin-top:8px}
-.code-actions button{flex:1;min-height:40px;font-family:inherit;font-size:clamp(8px,2.2vw,10px);padding:6px;cursor:pointer;border:1px solid #1e1e1e;-webkit-tap-highlight-color:transparent}
+.code-actions{display:flex;gap:3px;margin-top:6px}
+.code-actions button{flex:1;min-height:34px;font-family:inherit;font-size:clamp(7px,2vw,9px);padding:4px;cursor:pointer;border:1px solid #1e1e1e;-webkit-tap-highlight-color:transparent}
 .btn-del{background:#1a0000;color:#6b3030}
 .btn-ok{background:#001a00;color:#306b30}
 .btn-cancel{background:#0a0a0a;color:#555}
@@ -228,8 +228,8 @@ function updateInv(){
       tip.className='inv-tip';tip.textContent=ITEMS[id].name;
       slot.appendChild(tip);
       slot.addEventListener('click',()=>{
-        if(G.sel===id){G.sel=null;setMsg(ITEMS[id].desc)}
-        else{G.sel=id;setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.')}
+        if(G.sel===id){G.sel=null;setMsg(ITEMS[id].desc);if(id==='note')setMsg("피 묻은 메모: '내 번호를 기억해. 4 - 7 - 2 - 9'")}
+        else{G.sel=id;setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.');if(id==='note')setMsg("피 묻은 메모 선택됨 — '4 - 7 - 2 - 9' — 사용할 물체를 클릭하세요.")}
         updateInv();
       });
       slot.addEventListener('touchend',e=>{e.preventDefault()});
