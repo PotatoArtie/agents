@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>세인트 머시 정신병원</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{background:#000;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;height:100%}
+body{display:flex;justify-content:center;align-items:flex-start;padding-top:env(safe-area-inset-top)}
+.game-wrap{width:100%;max-width:640px;font-family:'Press Start 2P','Courier New',monospace;padding-bottom:env(safe-area-inset-bottom)}
+.title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:8px 8px 0 0}
+.title-text{color:#6b0000;font-size:clamp(7px,2vw,10px);letter-spacing:1px}
+.room-num{color:#3a1a1a;font-size:clamp(7px,1.8vw,9px)}
+.scene-wrapper{position:relative;width:640px;height:360px;overflow:hidden;cursor:crosshair;touch-action:none;background:#000}
+canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image-rendering:crisp-edges}
+.crt{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:20}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:21}
+.flash{position:absolute;inset:0;background:#680000;opacity:0;transition:opacity 0.18s;pointer-events:none;z-index:22}
+.room-label{position:absolute;top:8px;left:10px;color:#443838;font-size:clamp(7px,2vw,9px);font-family:inherit;z-index:25;pointer-events:none;text-shadow:1px 1px 2px #000}
+.nav-area{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:30}
+.nav-btn{background:rgba(4,0,0,0.88);border:1px solid #250608;color:#4a1818;font-family:inherit;font-size:clamp(9px,2.5vw,10px);padding:8px 12px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background 0.2s}
+.nav-btn:hover{background:rgba(40,0,0,0.95);color:#7a2828}
+.nav-btn:active{background:rgba(60,0,0,0.95)}
+.hover-tip{position:absolute;background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:8px;padding:4px 8px;pointer-events:none;z-index:26;display:none;white-space:nowrap}
+.code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:16px;z-index:40;width:min(220px,85vw);border-radius:4px}
+.code-modal.open{display:block}
+.code-title{color:#6b0000;font-size:clamp(8px,2.2vw,10px);text-align:center;margin-bottom:12px;font-family:inherit}
+.code-display{background:#0a0a0a;border:1px solid #1e0000;color:#8a6060;font-family:inherit;font-size:clamp(14px,4vw,18px);text-align:center;padding:8px;margin-bottom:12px;letter-spacing:6px;min-height:36px;display:flex;align-items:center;justify-content:center}
+.code-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px}
+.num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(14px,4vw,16px);padding:clamp(10px,3vw,12px);cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
+.num-btn:hover{background:#1a1a1a}
+.num-btn:active{background:#2a0000}
+.num-btn.zero{grid-column:2}
+.code-actions{display:flex;gap:4px;margin-top:8px}
+.code-actions button{flex:1;min-height:40px;font-family:inherit;font-size:clamp(8px,2.2vw,10px);padding:6px;cursor:pointer;border:1px solid #1e1e1e;-webkit-tap-highlight-color:transparent}
+.btn-del{background:#1a0000;color:#6b3030}
+.btn-ok{background:#001a00;color:#306b30}
+.btn-cancel{background:#0a0a0a;color:#555}
+.code-led{height:3px;margin-bottom:8px;background:#1a0000;transition:background 0.3s}
+.code-led.correct{background:#004400}
+.code-led.wrong{background:#880000}
+.win-screen{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.96);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.win-screen.open{display:flex}
+.win-title{color:#288828;font-family:inherit;font-size:clamp(10px,3vw,14px);animation:blink 1.2s infinite;margin-bottom:24px}
+.win-text{color:#404040;font-family:inherit;font-size:clamp(8px,2.2vw,10px);line-height:2.2;margin-bottom:20px}
+.win-end{color:#303030;font-family:inherit;font-size:clamp(9px,2.5vw,11px);margin-top:16px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.message-box{background:#020102;border:1px solid #180810;border-top:none;padding:10px 14px;min-height:80px;display:flex;align-items:flex-start}
+.message-text{color:#8a8088;font-size:clamp(9px,2.5vw,11px);line-height:1.9;font-family:inherit}
+.inventory-bar{background:#010101;border:1px solid #160810;border-top:none;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-wrap:nowrap;border-radius:0 0 8px 8px}
+.inv-label{color:#3a2030;font-size:clamp(7px,1.8vw,9px);font-family:inherit;flex-shrink:0}
+.inv-slots{display:flex;gap:4px;flex:1;justify-content:flex-start}
+.inv-slot{width:clamp(44px,12vw,46px);height:clamp(44px,12vw,46px);border:1px solid #161616;background:#050505;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;transition:border-color 0.2s}
+.inv-slot.selected{border-color:#7b0000;box-shadow:inset 0 0 8px rgba(120,0,0,0.4)}
+.inv-slot canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+.inv-slot .inv-tip{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:7px;padding:3px 6px;white-space:nowrap;display:none;z-index:60;pointer-events:none}
+.inv-slot:hover .inv-tip{display:block}
+.landscape-mode .message-box{min-height:0;padding:6px 12px}
+.landscape-mode .title-bar{padding:4px 10px}
+.landscape-mode .inv-slot{width:36px;height:36px}
+</style>
+</head>
+<body>
+<div class="game-wrap">
+  <div class="title-bar">
+    <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
+    <span class="room-num" id="room-num">ROOM 01</span>
+  </div>
+  <div class="scene-wrapper" id="scene-wrapper">
+    <canvas id="gc" width="640" height="360"></canvas>
+    <div class="crt"></div>
+    <div class="vignette"></div>
+    <div class="flash" id="flash"></div>
+    <div class="room-label" id="room-label">병실 101호</div>
+    <div class="nav-area" id="nav-area"></div>
+    <div class="hover-tip" id="hover-tip"></div>
+    <div class="code-modal" id="code-modal">
+      <div class="code-title">[ LOCKED CABINET ]</div>
+      <div class="code-led" id="code-led"></div>
+      <div class="code-display" id="code-display">_ _ _ _</div>
+      <div class="code-grid" id="code-grid"></div>
+      <div class="code-actions">
+        <button class="btn-del" id="btn-del">삭제</button>
+        <button class="btn-ok" id="btn-ok">확인</button>
+        <button class="btn-cancel" id="btn-cancel">취소</button>
+      </div>
+    </div>
+    <div class="win-screen" id="win-screen">
+      <div class="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
+      <div class="win-text">
+        새벽 4시 37분.<br>
+        세인트 머시 정신병원에서 탈출.<br><br>
+        손에는 20년간 묻혀있던<br>
+        진실이 담긴 메모지 한 장.<br><br>
+        이 병원의 비밀을 세상에 알릴 시간이다.
+      </div>
+      <div class="win-end">— THE END —</div>
+    </div>
+  </div>
+  <div class="message-box">
+    <div class="message-text" id="msg">눈을 떴다. 어디인지 모르겠다...</div>
+  </div>
+  <div class="inventory-bar">
+    <span class="inv-label">아이템</span>
+    <div class="inv-slots" id="inv-slots"></div>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+const sceneWrapper = document.getElementById('scene-wrapper');
+const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
+
+const G = {
+  room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
+  displayScale:1.0, touchFeedback:null,
+  flags:{bed:false,wall:false,lock:false,nurse:false,fuse:false,power:false}
+};
+
+const ITEMS = {
+  key:{name:'녹슨 열쇠',desc:'낡고 녹슨 열쇠. 어딘가의 자물쇠에 맞을 것 같다.'},
+  note:{name:'피 묻은 메모',desc:"'내 번호를 기억해. 4 - 7 - 2 - 9' 라고 적혀있다."},
+  card:{name:'직원 키카드',desc:'세인트 머시 병원 직원용 키카드. 전자 잠금장치에 사용 가능.'},
+  fuse:{name:'퓨즈',desc:'오래된 퓨즈. 퓨즈박스에 설치할 수 있을 것 같다.'}
+};
+
+const ROOM_LABELS = {r1:'병실 101호',r2:'복도',r3:'지하실'};
+const ROOM_NUMS = {r1:'ROOM 01',r2:'ROOM 02',r3:'ROOM 03'};
+const ROOM_MSGS = {
+  r1:'낡은 병실이다. 쇠 냄새와 습기가 코를 찌른다. 여기서 나가야 한다...',
+  r2:'어두운 복도. 형광등이 깜빡인다. 복도 끝에서 시선이 느껴진다...',
+  r3:'지하실이다. 천장에서 물이 새고 있다. 비상구가 보인다!'
+};
+
+const NAV_ROUTES = {
+  r1:[{label:'복도 →',to:'r2'}],
+  r2:[{label:'← 병실',to:'r1'},{label:'↓ 지하실',to:'r3'}],
+  r3:[{label:'← 복도',to:'r2'}]
+};
+
+const zones = {
+  r1:[
+    {id:'bed',x:4,y:30,w:58,h:28,tip:'낡은 침대'},
+    {id:'drawer',x:4,y:58,w:18,h:14,tip:'서랍장'},
+    {id:'window',x:111,y:2,w:44,h:56,tip:'창문'},
+    {id:'hand',x:98,y:16,w:22,h:34,tip:'핏자국'}
+  ],
+  r2:[
+    {id:'locker',x:2,y:12,w:30,h:60,tip:'녹슬은 사물함'},
+    {id:'nurse',x:84,y:30,w:68,h:44,tip:'간호사실 캐비닛'},
+    {id:'shadow',x:60,y:6,w:40,h:66,tip:'복도 끝...'}
+  ],
+  r3:[
+    {id:'fbox',x:6,y:14,w:32,h:48,tip:'퓨즈박스'},
+    {id:'exit',x:102,y:2,w:54,h:76,tip:'비상구'}
+  ]
+};
+
+let flickerVal = 1.0;
+
+function p(vx,vy,vw,vh,color){ctx.fillStyle=color;ctx.fillRect(vx*S,vy*S,vw*S,vh*S)}
+
+function setMsg(t){document.getElementById('msg').textContent=t}
+
+function flash(color='#680000'){
+  const el=document.getElementById('flash');
+  el.style.background=color;
+  el.style.opacity='0.75';
+  setTimeout(()=>el.style.opacity='0',180);
+}
+
+function addItem(id){
+  if(!G.inv.includes(id))G.inv.push(id);
+  updateInv();
+}
+
+function removeItem(id){
+  G.inv=G.inv.filter(i=>i!==id);
+  if(G.sel===id)G.sel=null;
+  updateInv();
+}
+
+function drawItemSprite(c,id){
+  const x=c.getContext('2d');
+  x.clearRect(0,0,32,32);
+  x.imageSmoothingEnabled=false;
+  if(id==='key'){
+    x.fillStyle='#8B6914';
+    x.fillRect(4,12,8,8);x.clearRect(6,14,4,4);
+    x.fillRect(12,15,14,3);
+    x.fillRect(22,11,3,4);x.fillRect(18,11,3,4);x.fillRect(26,13,2,5);
+    x.fillStyle='#6B4F10';x.fillRect(5,13,6,6);x.clearRect(7,15,2,2);
+  } else if(id==='note'){
+    x.fillStyle='#C8B87C';x.fillRect(4,4,24,24);
+    x.fillStyle='#A09060';x.fillRect(8,10,16,1);x.fillRect(8,15,16,1);x.fillRect(8,20,12,1);
+    x.fillStyle='#6b0000';x.fillRect(22,22,6,6);x.fillStyle='#5a0000';x.fillRect(24,24,3,3);
+  } else if(id==='card'){
+    x.fillStyle='#1a3a6a';x.fillRect(3,8,26,16);
+    x.fillStyle='#2a4a8a';x.fillRect(4,9,24,14);
+    x.fillStyle='#C8A820';x.fillRect(6,12,6,5);x.fillStyle='#A08818';x.fillRect(7,13,4,3);
+    x.fillStyle='#ddd';x.fillRect(14,18,12,2);
+  } else if(id==='fuse'){
+    x.fillStyle='#888';x.fillRect(10,4,12,5);x.fillRect(10,23,12,5);
+    x.fillStyle='#dde8ee';x.fillRect(11,9,10,14);
+    x.fillStyle='#C8A820';x.fillRect(14,11,4,10);
+    x.fillStyle='#aaa';x.fillRect(12,6,8,3);x.fillRect(12,23,8,3);
+  }
+}
+
+function updateInv(){
+  const el=document.getElementById('inv-slots');
+  el.innerHTML='';
+  for(let i=0;i<6;i++){
+    const slot=document.createElement('div');
+    slot.className='inv-slot';
+    if(i<G.inv.length){
+      const id=G.inv[i];
+      if(G.sel===id)slot.classList.add('selected');
+      const c=document.createElement('canvas');
+      c.width=32;c.height=32;c.style.width='28px';c.style.height='28px';
+      drawItemSprite(c,id);
+      slot.appendChild(c);
+      const tip=document.createElement('span');
+      tip.className='inv-tip';tip.textContent=ITEMS[id].name;
+      slot.appendChild(tip);
+      slot.addEventListener('click',()=>{
+        if(G.sel===id){G.sel=null;setMsg(ITEMS[id].desc)}
+        else{G.sel=id;setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.')}
+        updateInv();
+      });
+      slot.addEventListener('touchend',e=>{e.preventDefault()});
+    }
+    el.appendChild(slot);
+  }
+}
+
+function getVirtualCoords(cx,cy){
+  const r=canvas.getBoundingClientRect();
+  return{vx:(cx-r.left)/r.width*VIRTUAL_W,vy:(cy-r.top)/r.height*VIRTUAL_H};
+}
+
+function getZone(vx,vy){
+  const zs=zones[G.room]||[];
+  for(const z of zs){if(vx>=z.x&&vx<=z.x+z.w&&vy>=z.y&&vy<=z.y+z.h)return z}
+  return null;
+}
+
+function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
+
+function handleClick(id){
+  if(G.room==='r1'){
+    if(id==='bed'){
+      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
+      else setMsg('이미 뒤져봤다. 매트리스 아래에는 더 이상 없다.');
+    } else if(id==='drawer'){
+      setMsg('서랍을 당겨보니 잠겨있다. 자물쇠가 있지만 이 열쇠는 맞지 않는 것 같다.');
+    } else if(id==='window'){
+      setMsg('창살이 달린 창문이다. 달빛이 들어온다. 밖은 짙은 안개로 덮여있다. 탈출할 수 없다.');
+    } else if(id==='hand'){
+      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
+      else setMsg('핏자국이다. 메모지는 이미 챙겼다.');
+    }
+  } else if(G.room==='r2'){
+    if(id==='locker'){
+      if(!G.flags.lock){
+        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
+        else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
+      } else setMsg('이미 열린 사물함이다. 텅 비어있다.');
+    } else if(id==='nurse'){
+      if(G.flags.nurse){setMsg('이미 열린 캐비닛이다.');return}
+      if(!G.inv.includes('note')){setMsg('비밀번호 잠금장치가 있다. 번호를 어딘가에서 찾아야 할 것 같다...');return}
+      openCodePad();
+    } else if(id==='shadow'){
+      flash();
+      setMsg('복도 끝이 어둠에 잠겨있다... 뭔가가 움직인 것 같기도 하다.');
+      setTimeout(()=>setMsg('쿵! 복도 어딘가에서 소리가 났다. 빨리 탈출해야 한다.'),700);
+    }
+  } else if(G.room==='r3'){
+    if(id==='fbox'){
+      if(G.flags.fuse){setMsg('퓨즈가 이미 설치되어 있다. 전력이 흐르고 있다.');return}
+      if(G.sel==='fuse'){G.flags.fuse=true;G.flags.power=true;removeItem('fuse');flash('#004400');G.sel=null;setMsg('퓨즈를 설치했다! 비상구 전자 잠금장치에 전력이 공급되었다!')}
+      else setMsg('퓨즈박스. 퓨즈가 빠져있어 전력이 차단된 상태다. 맞는 퓨즈가 필요하다.');
+    } else if(id==='exit'){
+      if(!G.flags.power){setMsg('전자 잠금장치가 작동하지 않는다. 먼저 전력을 복구해야 한다.');return}
+      if(G.sel==='card'){
+        G.sel=null;updateInv();
+        setMsg('키카드를 단말기에 대자 잠금장치가 해제된다. 문이 열렸다! 탈출이다!!!');
+        setTimeout(()=>document.getElementById('win-screen').classList.add('open'),400);
+      } else if(G.inv.includes('card')){
+        setMsg('키카드 단말기가 보인다. 인벤토리에서 키카드를 선택해 사용하세요.');
+      } else {
+        setMsg('전자식 키카드 단말기가 있다. 직원 키카드가 필요하다.');
+      }
+    }
+  }
+}
+
+canvas.addEventListener('click',e=>{
+  if(G.pad)return;
+  const{vx,vy}=getVirtualCoords(e.clientX,e.clientY);
+  const z=getZone(vx,vy);
+  if(!z){if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.');return}
+  handleClick(z.id);
+});
+
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(G.pad)return;
+  const t=e.changedTouches[0];
+  const{vx,vy}=getVirtualCoords(t.clientX,t.clientY);
+  const z=getZone(vx,vy);
+  if(z){showTouchFeedback(z);handleClick(z.id)}
+  else{if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.')}
+},{passive:false});
+
+canvas.addEventListener('mousemove',e=>{
+  if('ontouchstart' in window)return;
+  const{vx,vy}=getVirtualCoords(e.clientX,e.clientY);
+  const z=getZone(vx,vy);
+  const tip=document.getElementById('hover-tip');
+  if(z){
+    tip.textContent=z.tip;tip.style.display='block';
+    const r=canvas.getBoundingClientRect();
+    tip.style.left=(e.clientX-r.left+10)+'px';
+    tip.style.top=(e.clientY-r.top-26)+'px';
+    canvas.style.cursor='pointer';
+  } else {tip.style.display='none';canvas.style.cursor='crosshair'}
+});
+canvas.addEventListener('mouseleave',()=>{document.getElementById('hover-tip').style.display='none'});
+
+function openCodePad(){
+  G.pad=true;G.code='';
+  document.getElementById('code-modal').classList.add('open');
+  document.getElementById('code-display').textContent='_ _ _ _';
+  document.getElementById('code-led').className='code-led';
+}
+
+function closeCodePad(){
+  G.pad=false;G.code='';
+  document.getElementById('code-modal').classList.remove('open');
+}
+
+function updateCodeDisplay(){
+  let d='';
+  for(let i=0;i<4;i++)d+=(i<G.code.length?G.code[i]:'_')+(i<3?' ':'');
+  document.getElementById('code-display').textContent=d;
+}
+
+function setupNumpad(){
+  const grid=document.getElementById('code-grid');
+  for(let i=1;i<=9;i++){
+    const b=document.createElement('button');b.className='num-btn';b.textContent=i;
+    b.addEventListener('click',()=>{if(G.code.length<4){G.code+=i;updateCodeDisplay()}});
+    grid.appendChild(b);
+  }
+  const z=document.createElement('button');z.className='num-btn zero';z.textContent='0';
+  z.addEventListener('click',()=>{if(G.code.length<4){G.code+='0';updateCodeDisplay()}});
+  grid.appendChild(z);
+}
+
+function setupCodePadEvents(){
+  document.getElementById('btn-del').addEventListener('click',()=>{G.code=G.code.slice(0,-1);updateCodeDisplay()});
+  document.getElementById('btn-ok').addEventListener('click',()=>{
+    if(G.code==='4729'){
+      document.getElementById('code-led').className='code-led correct';
+      setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
+    } else {
+      document.getElementById('code-led').className='code-led wrong';
+      flash();setMsg('비밀번호가 틀렸다.');
+      setTimeout(()=>{G.code='';updateCodeDisplay();document.getElementById('code-led').className='code-led'},700);
+    }
+  });
+  document.getElementById('btn-cancel').addEventListener('click',()=>{closeCodePad();setMsg(ROOM_MSGS[G.room])});
+}
+
+function goRoom(id){
+  G.room=id;G.pad=false;G.sel=null;
+  closeCodePad();
+  document.getElementById('room-label').textContent=ROOM_LABELS[id];
+  document.getElementById('room-num').textContent=ROOM_NUMS[id];
+  setMsg(ROOM_MSGS[id]);
+  updateInv();setupNav();
+}
+
+function setupNav(){
+  const el=document.getElementById('nav-area');el.innerHTML='';
+  const isMobile=window.innerWidth<640;
+  (NAV_ROUTES[G.room]||[]).forEach(n=>{
+    const b=document.createElement('button');b.className='nav-btn';b.textContent=n.label;
+    if(isMobile){b.style.flex='1';b.style.minHeight='48px'}
+    b.addEventListener('click',()=>goRoom(n.to));
+    b.addEventListener('touchend',e=>{e.preventDefault();goRoom(n.to)});
+    el.appendChild(b);
+  });
+  if(isMobile){el.style.right='0';el.style.left='0';el.style.bottom='0';el.style.display='flex'}
+  else{el.style.right='10px';el.style.left='';el.style.bottom='10px'}
+}
+
+function resizeGame(){
+  const cw=Math.min(window.innerWidth,640);
+  const sc=cw/640;const dh=Math.round(360*sc);
+  sceneWrapper.style.width=cw+'px';sceneWrapper.style.height=dh+'px';
+  canvas.style.width=cw+'px';canvas.style.height=dh+'px';
+  G.displayScale=sc;
+  setupNav();
+}
+
+function handleOrientation(){
+  const isL=window.innerWidth>window.innerHeight;
+  const w=document.querySelector('.game-wrap');
+  if(isL&&window.innerWidth<768)w.classList.add('landscape-mode');
+  else w.classList.remove('landscape-mode');
+  resizeGame();
+}
+
+window.addEventListener('resize',resizeGame);
+window.addEventListener('orientationchange',()=>setTimeout(handleOrientation,150));
+
+function updateFlicker(){
+  if(Math.random()<0.004){
+    flickerVal=0.05+Math.random()*0.35;
+    setTimeout(()=>flickerVal=0.7+Math.random()*0.28,70+Math.random()*110);
+    setTimeout(()=>flickerVal=0.1+Math.random()*0.25,190+Math.random()*80);
+    setTimeout(()=>flickerVal=1.0,330+Math.random()*120);
+  }
+}
+
+// ===== ROOM DRAWING FUNCTIONS =====
+
+function drawRoom1(fv){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#1c1422');
+  // Wall texture lines
+  ctx.fillStyle='#1a1220';
+  for(let i=0;i<160;i+=8)p(i,4,1,68,'#1a1220');
+  // Baseboard
+  p(0,70,160,2,'#12101a');
+
+  // Fluorescent light
+  const lc=fv>0.6?'#ffffaa':fv>0.25?'#504030':'#0a0810';
+  p(70,0,20,1,lc);
+  p(72,1,16,1,fv>0.5?'#cccc88':'#0a0810');
+  // Light cone
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.13;ctx.fillStyle='#ffffcc';
+    ctx.beginPath();ctx.moveTo(73*S,2*S);ctx.lineTo(87*S,2*S);ctx.lineTo(122*S,72*S);ctx.lineTo(38*S,72*S);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  // Window frame
+  p(113,2,40,2,'#3a2818');p(113,54,40,2,'#3a2818');
+  p(113,2,2,54,'#3a2818');p(151,2,2,54,'#3a2818');
+  // Window glass
+  p(115,4,36,50,'#0d1028');
+  ctx.save();ctx.globalAlpha=0.45;p(115,4,36,50,'rgba(80,96,176,1)');ctx.restore();
+  // Window bars
+  p(127,2,2,54,'#252c32');p(139,2,2,54,'#252c32');
+  // Moon
+  ctx.save();ctx.fillStyle='#d0d8f8';ctx.beginPath();ctx.arc(135*S,16*S,6*S,0,Math.PI*2);ctx.fill();
+  ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.arc(138*S,14*S,5*S,0,Math.PI*2);ctx.fill();
+  ctx.globalCompositeOperation='source-over';ctx.restore();
+  // Moon glow
+  ctx.save();ctx.globalAlpha=0.08;ctx.fillStyle='#d0d8f8';ctx.beginPath();ctx.arc(135*S,16*S,12*S,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  // Door
+  p(72,16,28,56,'#3a2818');p(74,18,24,52,'#442d1c');
+  // Door window
+  p(78,20,16,10,'#0d1028');
+  ctx.save();ctx.globalAlpha=0.3;p(78,20,16,10,'rgba(80,96,176,1)');ctx.restore();
+  // Door handle
+  p(93,44,5,2,'#C8A820');p(94,43,3,4,'#A08818');
+  // Door frame
+  p(71,16,1,56,'#2a1c10');p(100,16,1,56,'#2a1c10');p(71,16,30,1,'#2a1c10');
+
+  // Bed frame
+  p(5,50,52,18,'#252c32');
+  p(5,52,52,2,'#2a3038');
+  // Mattress
+  p(7,38,48,13,'#383038');
+  // Sheet with blood
+  p(7,38,48,12,'#404040');
+  p(18,37,10,6,'#5a0000');p(22,39,6,8,'#4a0000');
+  // Pillow
+  p(7,36,20,4,'#363036');p(8,37,18,2,'#3a3038');
+  // Bed posts
+  p(4,33,2,35,'#252c32');p(56,33,2,35,'#252c32');
+  p(4,33,54,1,'#2a3038');
+  // Bed legs
+  p(6,66,4,4,'#1a2028');p(50,66,4,4,'#1a2028');
+
+  // IV Stand
+  p(57,14,1,52,'#353840');
+  p(55,14,5,1,'#353840');
+  p(54,66,7,1,'#353840');
+  p(53,67,3,2,'#353840');p(59,67,3,2,'#353840');
+  // IV bag
+  p(55,8,5,6,'#2a4a5a');ctx.save();ctx.globalAlpha=0.3;p(56,9,3,4,'#80a0b0');ctx.restore();
+
+  // Dresser
+  p(5,60,16,10,'#3a2818');p(6,61,14,3,'#442d1c');p(6,65,14,3,'#442d1c');
+  p(12,62,2,1,'#C8A820');p(12,66,2,1,'#C8A820');
+
+  // Blood handprint on wall
+  p(106,22,3,10,'#5a0000');p(110,20,3,12,'#5a0000');p(114,22,3,10,'#5a0000');
+  p(102,24,3,8,'#4a0000');p(118,25,2,7,'#4a0000');
+  // Palm
+  p(104,30,14,6,'#5a0000');p(105,29,12,8,'#4a0000');
+  // Blood drip
+  p(107,36,3,6,'#5a0000');p(108,42,2,4,'#4a0000');p(109,46,1,2,'#3a0000');
+  p(112,34,2,8,'#4a0000');p(112,42,1,3,'#3a0000');
+
+  // Floor details
+  p(20,74,3,1,'#141018');p(80,76,4,1,'#141018');p(120,73,2,1,'#141018');
+
+  // Touch feedback
+  if(G.touchFeedback&&G.t<G.touchFeedback.until){
+    const z=G.touchFeedback.zone;
+    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
+    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
+  }
+}
+
+function drawRoom2(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+
+  // Perspective corridor walls
+  ctx.save();
+  // Left wall
+  ctx.fillStyle='#1c1422';
+  ctx.beginPath();ctx.moveTo(0,4*S);ctx.lineTo(0,72*S);ctx.lineTo(68*S,72*S);ctx.lineTo(73*S,4*S);ctx.closePath();ctx.fill();
+  // Right wall
+  ctx.beginPath();ctx.moveTo(160*S,4*S);ctx.lineTo(160*S,72*S);ctx.lineTo(92*S,72*S);ctx.lineTo(87*S,4*S);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // Corridor end (dark)
+  p(73,4,14,68,'#080610');
+
+  // Floor perspective lines
+  ctx.strokeStyle='#141018';ctx.lineWidth=1;
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.moveTo((20+i*30)*S,72*S);ctx.lineTo(80*S,70*S);ctx.stroke();
+  }
+
+  // Fluorescent light
+  const lc=fv>0.6?'#ffffaa':fv>0.25?'#504030':'#0a0810';
+  p(38,0,84,1,lc);
+  if(fv>0.3){p(50,1,60,1,fv>0.5?'#cccc88':'#302820')}
+
+  // Light cone
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.08;ctx.fillStyle='#ffffcc';
+    ctx.beginPath();ctx.moveTo(50*S,2*S);ctx.lineTo(110*S,2*S);ctx.lineTo(140*S,72*S);ctx.lineTo(20*S,72*S);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  // Left wall lockers (perspective)
+  for(let i=0;i<4;i++){
+    const t2=i/4;
+    const lx=4+t2*55;
+    const ly=18+t2*20;
+    const lw=18-t2*10;
+    const lh=36-t2*18;
+    const bright=1-t2*0.5;
+    const r=Math.floor(30*bright),g=Math.floor(44*bright),b=Math.floor(34*bright);
+    p(lx,ly,lw,lh,`rgb(${r},${g},${b})`);
+    // Locker door line
+    p(lx+lw/2-0.5,ly+1,1,lh-2,`rgb(${r-8},${g-8},${b-8})`);
+    // Handle
+    p(lx+lw/2+2,ly+lh/2,Math.max(1,lw*0.1),Math.max(1,lh*0.05),'#555');
+    if(i===0&&G.flags.lock){
+      p(lx+1,ly+1,lw-2,lh-2,'#0a1a0e');
+    }
+  }
+
+  // Nurse station (right side)
+  p(100,50,58,22,'#1a1422');
+  p(102,52,54,18,'#221828');
+  // Counter top
+  p(100,48,58,3,'#2a2030');
+  // Cabinet
+  p(120,30,38,20,'#181020');
+  p(122,32,34,16,'#201428');
+  // Keypad on cabinet
+  p(144,38,12,12,'#0a0a0a');
+  p(145,39,10,10,'#111');
+  // LED
+  const ledColor=G.flags.nurse?'#00aa00':'#3a0000';
+  p(146,49,8,2,ledColor);
+  // Misc items on counter
+  p(104,47,4,2,'#2a2a3a');p(112,46,6,3,'#3a2020');
+
+  // Shadow figure
+  const sx=73+Math.round(Math.sin(t*0.002)*1.5);
+  ctx.save();
+  ctx.globalAlpha=0.22+Math.sin(t*0.0008)*0.07;
+  ctx.fillStyle='#000000';
+  // Body
+  ctx.fillRect(sx*S,26*S,11*S,34*S);
+  // Head
+  ctx.fillRect((sx+1)*S,18*S,9*S,10*S);
+  ctx.restore();
+
+  // Wall texture
+  ctx.save();ctx.globalAlpha=0.1;
+  for(let i=0;i<7;i++){p(5+i*10,10+i*8,1,50-i*6,'#0a0810')}
+  for(let i=0;i<5;i++){p(155-i*12,12+i*8,1,48-i*7,'#0a0810')}
+  ctx.restore();
+
+  // Touch feedback
+  if(G.touchFeedback&&G.t<G.touchFeedback.until){
+    const z=G.touchFeedback.zone;
+    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
+    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
+  }
+}
+
+function drawRoom3(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls (concrete)
+  p(0,4,160,68,'#18161e');
+  // Concrete texture
+  for(let i=0;i<20;i++){
+    p(i*8+2,4+Math.floor(i*3.7)%60,1,2,'#1a181f');
+  }
+  // Wall cracks
+  ctx.strokeStyle='#1e1c24';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(45*S,10*S);ctx.lineTo(47*S,35*S);ctx.lineTo(44*S,55*S);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(90*S,8*S);ctx.lineTo(92*S,28*S);ctx.stroke();
+
+  // Ceiling pipes
+  p(12,0,136,3,'#303038');
+  p(12,0,136,1,'#383840');
+  // Pipe supports
+  p(14,0,2,5,'#282830');p(78,0,2,5,'#282830');p(134,0,2,5,'#282830');
+  // Pipe joints
+  p(40,1,4,2,'#3a3a42');p(100,1,4,2,'#3a3a42');
+
+  // Water drip
+  const drip=(t*0.0014)%1;
+  if(drip<0.78){
+    const dy=2+Math.round(drip*70);
+    p(80,dy,1,2,'#1830a0');
+    if(drip>0.1)p(80,dy-3,1,1,'#1020708');
+  }
+
+  // Water puddle
+  ctx.save();ctx.globalAlpha=0.2;p(32,74,96,8,'#1830a0');ctx.restore();
+  ctx.save();ctx.globalAlpha=0.1;p(36,75,88,6,'#2040b0');ctx.restore();
+
+  // Water ripples
+  const rip=(t*0.0016)%1;
+  ctx.save();ctx.strokeStyle='#3050c0';ctx.lineWidth=0.5;
+  for(let i=0;i<3;i++){
+    const radius=((rip+i*0.38)%1)*24;
+    ctx.globalAlpha=0.12*(1-((rip+i*0.38)%1));
+    ctx.beginPath();ctx.ellipse(80*S,78*S,radius*S,radius*S*0.22,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
+
+  // Fuse box
+  p(7,16,30,44,'#252830');p(8,17,28,42,'#1e2228');
+  // Fuse box door frame
+  p(7,16,30,1,'#353840');p(7,59,30,1,'#353840');p(7,16,1,44,'#353840');p(36,16,1,44,'#353840');
+  // Handle
+  p(33,36,2,6,'#555');
+  // Internal fuse slots (3x2)
+  for(let row=0;row<2;row++){
+    for(let col=0;col<3;col++){
+      const fx=10+col*9;const fy=22+row*16;
+      p(fx,fy,6,11,'#0a0c10');
+      if(G.flags.fuse&&row===0&&col===1){
+        // Installed fuse
+        p(fx+1,fy+1,4,9,'#dde8ee');
+        p(fx+2,fy+3,2,5,'#C8A820');
+        p(fx,fy+10,6,2,'#00aa00');
+      } else {
+        p(fx+2,fy+4,2,3,'#3a0000');
+      }
+    }
+  }
+  // Warning label
+  p(9,50,22,4,'#8a8a00');
+  for(let i=0;i<5;i++)p(10+i*4,51,2,2,'#1a1a00');
+
+  // Fluorescent (dim in basement)
+  const lc2=fv>0.6?'#888866':fv>0.25?'#403828':'#0a0810';
+  p(50,0,60,1,lc2);
+
+  // Emergency exit door
+  p(104,2,56,76,'#1a2028');
+  // Door surface
+  const doorColor=G.flags.power?'#1e2830':'#161c24';
+  p(108,4,44,68,doorColor);
+  p(110,6,40,64,'#1a2428');
+  // Door bolts
+  p(106,6,3,3,'#353840');p(148,6,3,3,'#353840');
+  p(106,70,3,3,'#353840');p(148,70,3,3,'#353840');
+  // Door reinforcement lines
+  p(108,30,44,1,'#222830');p(108,50,44,1,'#222830');
+
+  // Card terminal
+  p(145,36,12,18,'#181c20');
+  p(146,37,10,16,'#101418');
+  // Terminal screen
+  p(147,39,8,6,'#0a0c10');
+  // Terminal LED
+  const tLed=G.flags.power?'#00aa00':'#3a0000';
+  p(149,46,4,2,tLed);
+  // Card slot
+  p(148,50,6,2,'#080a0e');
+
+  // Exit sign
+  p(114,1,30,4,G.flags.power?'#0a3a0a':'#0a1a0a');
+  if(G.flags.power){
+    ctx.save();ctx.fillStyle='#00aa00';ctx.font=(2*S)+'px monospace';
+    ctx.fillText('EXIT',118*S,4*S);ctx.restore();
+  }
+
+  // Light cone (dim)
+  if(fv>0.2){
+    ctx.save();ctx.globalAlpha=fv*0.05;ctx.fillStyle='#ffffcc';
+    ctx.beginPath();ctx.moveTo(55*S,2*S);ctx.lineTo(105*S,2*S);ctx.lineTo(130*S,72*S);ctx.lineTo(30*S,72*S);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+
+  // Touch feedback
+  if(G.touchFeedback&&G.t<G.touchFeedback.until){
+    const z=G.touchFeedback.zone;
+    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
+    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
+  }
+}
+
+// ===== MAIN LOOP =====
+let lastT=0;
+function loop(timestamp){
+  const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
+  updateFlicker();
+  ctx.clearRect(0,0,640,360);
+  if(G.room==='r1')drawRoom1(flickerVal);
+  else if(G.room==='r2')drawRoom2(flickerVal,G.t);
+  else if(G.room==='r3')drawRoom3(flickerVal,G.t);
+  requestAnimationFrame(loop);
+}
+
+// ===== AMBIENT SCARE =====
+function setupAmbientScare(){
+  setInterval(()=>{
+    if(Math.random()<0.65){
+      const scares=[
+        '복도 어딘가에서 날카로운 비명소리가 들렸다...',
+        '조명이 완전히 꺼졌다가 다시 켜진다.',
+        '문손잡이가 덜컹거린다. 안에서 열려는 것 같다.',
+        '벽 너머에서 누군가 긁는 소리가 들린다.',
+        '낮고 음산한 웃음소리가 들린다...',
+        '바닥이 삐걱거린다. 무언가가 다가오는 소리다.'
+      ];
+      flash();
+      setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)]),110);
+    }
+  },22000);
+}
+
+// ===== INIT =====
+function init(){
+  setupNumpad();
+  setupCodePadEvents();
+  setupAmbientScare();
+  resizeGame();
+  goRoom('r1');
+  requestAnimationFrame(loop);
+}
+init();
+</script>
+</body>
+</html>
