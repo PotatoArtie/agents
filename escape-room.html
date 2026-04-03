@@ -115,6 +115,248 @@ const ctx = canvas.getContext('2d');
 const sceneWrapper = document.getElementById('scene-wrapper');
 const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
 
+// ===== WEB AUDIO: SOUND ENGINE =====
+let audioCtx = null;
+let bgmStarted = false;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Procedural sound effects
+function sfxPickup() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+  o.frequency.linearRampToValueAtTime(1100, audioCtx.currentTime + 0.15);
+  g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.25);
+  o.start(); o.stop(audioCtx.currentTime + 0.25);
+}
+
+function sfxClick() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.value = 200;
+  g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.06);
+  o.start(); o.stop(audioCtx.currentTime + 0.06);
+}
+
+function sfxNumpad() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.value = 440 + Math.random() * 200;
+  g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+  o.start(); o.stop(audioCtx.currentTime + 0.05);
+}
+
+function sfxCorrect() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.1, t + i * 0.1);
+    g.gain.linearRampToValueAtTime(0, t + i * 0.1 + 0.2);
+    o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.2);
+  });
+}
+
+function sfxWrong() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(180, t);
+  o.frequency.linearRampToValueAtTime(80, t + 0.4);
+  g.gain.setValueAtTime(0.12, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.4);
+  o.start(); o.stop(t + 0.4);
+}
+
+function sfxScare() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Dissonant low rumble
+  const o1 = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  o1.type = 'sawtooth'; o1.frequency.value = 55;
+  o2.type = 'sawtooth'; o2.frequency.value = 58;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.15, t + 0.05);
+  g.gain.linearRampToValueAtTime(0.08, t + 0.3);
+  g.gain.linearRampToValueAtTime(0, t + 0.8);
+  o1.start(); o2.start(); o1.stop(t + 0.8); o2.stop(t + 0.8);
+  // High screech
+  const o3 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o3.connect(g2); g2.connect(audioCtx.destination);
+  o3.type = 'sine';
+  o3.frequency.setValueAtTime(2000, t);
+  o3.frequency.linearRampToValueAtTime(3500, t + 0.15);
+  o3.frequency.linearRampToValueAtTime(1800, t + 0.5);
+  g2.gain.setValueAtTime(0, t);
+  g2.gain.linearRampToValueAtTime(0.06, t + 0.03);
+  g2.gain.linearRampToValueAtTime(0, t + 0.5);
+  o3.start(); o3.stop(t + 0.5);
+}
+
+function sfxPower() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(60, t);
+  o.frequency.linearRampToValueAtTime(120, t + 0.3);
+  o.frequency.setValueAtTime(120, t + 0.3);
+  g.gain.setValueAtTime(0.15, t);
+  g.gain.setValueAtTime(0.12, t + 0.3);
+  g.gain.linearRampToValueAtTime(0.05, t + 1.2);
+  g.gain.linearRampToValueAtTime(0, t + 1.5);
+  o.start(); o.stop(t + 1.5);
+  // Electric buzz
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'square';
+  o2.frequency.value = 60;
+  g2.gain.setValueAtTime(0.03, t + 0.2);
+  g2.gain.linearRampToValueAtTime(0.01, t + 1.5);
+  g2.gain.linearRampToValueAtTime(0, t + 1.8);
+  o2.start(t + 0.2); o2.stop(t + 1.8);
+}
+
+function sfxWin() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Victory melody
+  [262, 330, 392, 523, 659, 784].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.12, t + i * 0.15);
+    g.gain.linearRampToValueAtTime(0.08, t + i * 0.15 + 0.1);
+    g.gain.linearRampToValueAtTime(0, t + i * 0.15 + 0.35);
+    o.start(t + i * 0.15); o.stop(t + i * 0.15 + 0.35);
+  });
+}
+
+function sfxDoor() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Creaky door noise
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.4, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const p = i / data.length;
+    data[i] = (Math.random() * 2 - 1) * 0.1 * Math.sin(p * Math.PI) * (1 + Math.sin(i * 0.02) * 0.5);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'bandpass'; flt.frequency.value = 800; flt.Q.value = 3;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.2, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.4);
+  src.start();
+}
+
+function sfxDrip() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(1200, t);
+  o.frequency.exponentialRampToValueAtTime(400, t + 0.08);
+  g.gain.setValueAtTime(0.04, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.1);
+  o.start(); o.stop(t + 0.1);
+}
+
+// ===== AMBIENT BACKGROUND MUSIC (procedural drone) =====
+let bgmNodes = [];
+function startBGM() {
+  if (bgmStarted) return;
+  ensureAudio();
+  bgmStarted = true;
+
+  // Dark pad: layered detuned oscillators through filters
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.035;
+  masterGain.connect(audioCtx.destination);
+
+  // Low drone
+  function makeDrone(freq, type, detune, filterFreq) {
+    const o = audioCtx.createOscillator();
+    const f = audioCtx.createBiquadFilter();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq; o.detune.value = detune;
+    f.type = 'lowpass'; f.frequency.value = filterFreq; f.Q.value = 1;
+    o.connect(f); f.connect(g); g.connect(masterGain);
+    g.gain.value = 0.8;
+    o.start();
+    bgmNodes.push(o, f, g);
+    return { osc: o, gain: g, filter: f };
+  }
+
+  // Base drone layer (very low)
+  makeDrone(55, 'sawtooth', 0, 200);
+  makeDrone(55.5, 'sawtooth', 7, 180);
+  // Eerie mid layer
+  makeDrone(82.4, 'triangle', -5, 300);
+  makeDrone(110, 'sine', 3, 250);
+  // Dissonant high whisper
+  makeDrone(164.8, 'sine', 12, 400);
+  makeDrone(155.6, 'sine', -8, 350);
+
+  // LFO to modulate master volume for breathing effect
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.type = 'sine'; lfo.frequency.value = 0.08;
+  lfoGain.gain.value = 0.015;
+  lfo.connect(lfoGain);
+  lfoGain.connect(masterGain.gain);
+  lfo.start();
+  bgmNodes.push(lfo, lfoGain, masterGain);
+}
+
+// Start audio on first user interaction (browser autoplay policy)
+function initAudioOnInteraction() {
+  ensureAudio();
+  startBGM();
+  document.removeEventListener('click', initAudioOnInteraction);
+  document.removeEventListener('touchstart', initAudioOnInteraction);
+}
+document.addEventListener('click', initAudioOnInteraction);
+document.addEventListener('touchstart', initAudioOnInteraction);
+
 const G = {
   room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
   displayScale:1.0, touchFeedback:null,
@@ -262,20 +504,20 @@ function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
 function handleClick(id){
   if(G.room==='r1'){
     if(id==='bed'){
-      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
+      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();sfxPickup();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
       else setMsg('이미 뒤져봤다. 매트리스 아래에는 더 이상 없다.');
     } else if(id==='drawer'){
       setMsg('서랍을 당겨보니 잠겨있다. 자물쇠가 있지만 이 열쇠는 맞지 않는 것 같다.');
     } else if(id==='window'){
       setMsg('창살이 달린 창문이다. 달빛이 들어온다. 밖은 짙은 안개로 덮여있다. 탈출할 수 없다.');
     } else if(id==='hand'){
-      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
+      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();sfxPickup();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
       else setMsg('핏자국이다. 메모지는 이미 챙겼다.');
     }
   } else if(G.room==='r2'){
     if(id==='locker'){
       if(!G.flags.lock){
-        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
+        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();sfxPickup();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
         else{
           if(G.inv.includes('key')) setMsg('낡은 자물쇠가 달려있다. 인벤토리에서 열쇠를 선택한 후 이곳을 다시 클릭하세요.');
           else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
@@ -286,14 +528,14 @@ function handleClick(id){
       if(!G.inv.includes('note')){setMsg('비밀번호 잠금장치가 있다. 번호를 어딘가에서 찾아야 할 것 같다...');return}
       openCodePad();
     } else if(id==='shadow'){
-      flash();
+      flash();sfxScare();
       setMsg('복도 끝이 어둠에 잠겨있다... 뭔가가 움직인 것 같기도 하다.');
       setTimeout(()=>setMsg('쿵! 복도 어딘가에서 소리가 났다. 빨리 탈출해야 한다.'),700);
     }
   } else if(G.room==='r3'){
     if(id==='fbox'){
       if(G.flags.fuse){setMsg('퓨즈가 이미 설치되어 있다. 전력이 흐르고 있다.');return}
-      if(G.sel==='fuse'){G.flags.fuse=true;G.flags.power=true;removeItem('fuse');flash('#004400');G.sel=null;setMsg('퓨즈를 설치했다! 비상구 전자 잠금장치에 전력이 공급되었다!')}
+      if(G.sel==='fuse'){G.flags.fuse=true;G.flags.power=true;removeItem('fuse');flash('#004400');sfxPower();G.sel=null;setMsg('퓨즈를 설치했다! 비상구 전자 잠금장치에 전력이 공급되었다!')}
       else{
         if(G.inv.includes('fuse')) setMsg('퓨즈박스. 퓨즈가 빠져있다. 인벤토리에서 퓨즈를 선택한 후 이곳을 다시 클릭하세요.');
         else setMsg('퓨즈박스. 퓨즈가 빠져있어 전력이 차단된 상태다. 맞는 퓨즈를 찾아야 한다.');
@@ -303,6 +545,7 @@ function handleClick(id){
       if(G.sel==='card'){
         G.sel=null;updateInv();
         setMsg('키카드를 단말기에 대자 잠금장치가 해제된다. 문이 열렸다! 탈출이다!!!');
+        sfxWin();
         setTimeout(()=>document.getElementById('win-screen').classList.add('open'),400);
       } else if(G.inv.includes('card')){
         setMsg('키카드 단말기가 보인다. 인벤토리에서 키카드를 선택해 사용하세요.');
@@ -318,7 +561,7 @@ canvas.addEventListener('click',e=>{
   const{vx,vy}=getVirtualCoords(e.clientX,e.clientY);
   const z=getZone(vx,vy);
   if(!z){if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.');return}
-  handleClick(z.id);
+  sfxClick();handleClick(z.id);
 });
 
 canvas.addEventListener('touchstart',e=>{
@@ -327,7 +570,7 @@ canvas.addEventListener('touchstart',e=>{
   const t=e.changedTouches[0];
   const{vx,vy}=getVirtualCoords(t.clientX,t.clientY);
   const z=getZone(vx,vy);
-  if(z){showTouchFeedback(z);handleClick(z.id)}
+  if(z){showTouchFeedback(z);sfxClick();handleClick(z.id)}
   else{if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.')}
 },{passive:false});
 
@@ -368,11 +611,11 @@ function setupNumpad(){
   const grid=document.getElementById('code-grid');
   for(let i=1;i<=9;i++){
     const b=document.createElement('button');b.className='num-btn';b.textContent=i;
-    b.addEventListener('click',()=>{if(G.code.length<4){G.code+=i;updateCodeDisplay()}});
+    b.addEventListener('click',()=>{if(G.code.length<4){G.code+=i;updateCodeDisplay();sfxNumpad()}});
     grid.appendChild(b);
   }
   const z=document.createElement('button');z.className='num-btn zero';z.textContent='0';
-  z.addEventListener('click',()=>{if(G.code.length<4){G.code+='0';updateCodeDisplay()}});
+  z.addEventListener('click',()=>{if(G.code.length<4){G.code+='0';updateCodeDisplay();sfxNumpad()}});
   grid.appendChild(z);
 }
 
@@ -381,10 +624,10 @@ function setupCodePadEvents(){
   document.getElementById('btn-ok').addEventListener('click',()=>{
     if(G.code==='4729'){
       document.getElementById('code-led').className='code-led correct';
-      setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
+      sfxCorrect();setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');sfxPickup();setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
     } else {
       document.getElementById('code-led').className='code-led wrong';
-      flash();setMsg('비밀번호가 틀렸다.');
+      sfxWrong();flash();setMsg('비밀번호가 틀렸다.');
       setTimeout(()=>{G.code='';updateCodeDisplay();document.getElementById('code-led').className='code-led'},700);
     }
   });
@@ -393,7 +636,7 @@ function setupCodePadEvents(){
 
 function goRoom(id){
   G.room=id;G.pad=false;G.sel=null;
-  closeCodePad();
+  closeCodePad();sfxDoor();
   document.getElementById('room-label').textContent=ROOM_LABELS[id];
   document.getElementById('room-num').textContent=ROOM_NUMS[id];
   setMsg(ROOM_MSGS[id]);
@@ -784,10 +1027,17 @@ function setupAmbientScare(){
         '낮고 음산한 웃음소리가 들린다...',
         '바닥이 삐걱거린다. 무언가가 다가오는 소리다.'
       ];
-      flash();
+      flash();sfxScare();
       setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)]),110);
     }
   },22000);
+}
+
+// Water drip sound loop for basement
+function setupDripLoop() {
+  setInterval(() => {
+    if (G.room === 'r3' && audioCtx) sfxDrip();
+  }, 2800);
 }
 
 // ===== INIT =====
@@ -795,6 +1045,7 @@ function init(){
   setupNumpad();
   setupCodePadEvents();
   setupAmbientScare();
+  setupDripLoop();
   resizeGame();
   goRoom('r1');
   requestAnimationFrame(loop);
