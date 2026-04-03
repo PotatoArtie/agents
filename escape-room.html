@@ -15,6 +15,11 @@ body{display:flex;justify-content:center;align-items:flex-start;padding-top:env(
 .title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:8px 8px 0 0}
 .title-text{color:#6b0000;font-size:clamp(7px,2vw,10px);letter-spacing:1px}
 .room-num{color:#3a1a1a;font-size:clamp(7px,1.8vw,9px)}
+.resource-bars{display:flex;gap:8px;align-items:center}
+.res-bar-wrap{display:flex;align-items:center;gap:4px}
+.res-label{color:#555;font-size:clamp(6px,1.5vw,7px);font-family:inherit}
+.res-bar-bg{width:60px;height:8px;background:#111;border:1px solid #222;border-radius:2px;overflow:hidden}
+.res-bar-fill{height:100%;transition:width 0.3s,background 0.3s}
 .scene-wrapper{position:relative;width:640px;height:360px;overflow:hidden;cursor:crosshair;touch-action:none;background:#000}
 canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image-rendering:crisp-edges}
 .crt{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:20}
@@ -25,6 +30,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .nav-btn{background:rgba(4,0,0,0.88);border:1px solid #250608;color:#4a1818;font-family:inherit;font-size:clamp(9px,2.5vw,10px);padding:8px 12px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background 0.2s}
 .nav-btn:hover{background:rgba(40,0,0,0.95);color:#7a2828}
 .nav-btn:active{background:rgba(60,0,0,0.95)}
+.nav-btn.locked{opacity:0.35;color:#333}
 .hover-tip{position:absolute;background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:8px;padding:4px 8px;pointer-events:none;z-index:26;display:none;white-space:nowrap}
 .code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:12px;z-index:40;width:min(200px,75vw);border-radius:4px;max-height:90%;overflow-y:auto}
 .code-modal.open{display:block}
@@ -43,6 +49,23 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .code-led{height:3px;margin-bottom:8px;background:#1a0000;transition:background 0.3s}
 .code-led.correct{background:#004400}
 .code-led.wrong{background:#880000}
+.doc-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a0808;border:1px solid #3a2020;padding:16px;z-index:40;width:min(280px,85vw);border-radius:4px;max-height:80%;overflow-y:auto}
+.doc-modal.open{display:block}
+.doc-title{color:#8a6040;font-size:clamp(8px,2.2vw,10px);text-align:center;margin-bottom:12px;font-family:inherit;border-bottom:1px solid #2a1a1a;padding-bottom:8px}
+.doc-body{color:#7a7070;font-size:clamp(8px,2vw,9px);line-height:2;font-family:inherit;margin-bottom:12px}
+.doc-close{display:block;width:100%;background:#1a0808;border:1px solid #2a1010;color:#6b3030;font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;text-align:center}
+.dial-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:40;width:min(220px,75vw);border-radius:4px}
+.dial-modal.open{display:block}
+.dial-title{color:#8a8060;font-size:clamp(7px,2vw,9px);text-align:center;margin-bottom:10px;font-family:inherit}
+.dial-display{background:#0a0a0a;border:1px solid #222;color:#aaa;font-family:inherit;font-size:clamp(16px,4vw,22px);text-align:center;padding:10px;margin-bottom:10px;letter-spacing:2px}
+.dial-btns{display:flex;gap:6px;justify-content:center;margin-bottom:8px}
+.dial-btn{background:#111;border:1px solid #333;color:#888;font-family:inherit;font-size:clamp(10px,3vw,14px);padding:10px 18px;cursor:pointer;min-width:44px;min-height:44px}
+.dial-btn:hover{background:#222}
+.dial-btn:active{background:#333}
+.act-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:45;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.act-overlay.open{display:flex}
+.act-title{color:#6b0000;font-family:inherit;font-size:clamp(12px,3.5vw,16px);margin-bottom:16px;animation:blink 1.2s infinite}
+.act-desc{color:#555;font-family:inherit;font-size:clamp(8px,2.2vw,10px);line-height:2.2}
 .win-screen{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.96);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .win-screen.open{display:flex}
 .win-title{color:#288828;font-family:inherit;font-size:clamp(10px,3vw,14px);animation:blink 1.2s infinite;margin-bottom:24px}
@@ -68,6 +91,10 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 <div class="game-wrap">
   <div class="title-bar">
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
+    <div class="resource-bars">
+      <div class="res-bar-wrap"><span class="res-label">SAN</span><div class="res-bar-bg"><div class="res-bar-fill" id="san-bar" style="width:100%;background:#3366aa"></div></div></div>
+      <div class="res-bar-wrap"><span class="res-label">BAT</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div></div>
+    </div>
     <span class="room-num" id="room-num">ROOM 01</span>
   </div>
   <div class="scene-wrapper" id="scene-wrapper">
@@ -89,16 +116,29 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
         <button class="btn-cancel" id="btn-cancel">취소</button>
       </div>
     </div>
-    <div class="win-screen" id="win-screen">
-      <div class="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
-      <div class="win-text">
-        새벽 4시 37분.<br>
-        세인트 머시 정신병원에서 탈출.<br><br>
-        손에는 20년간 묻혀있던<br>
-        진실이 담긴 메모지 한 장.<br><br>
-        이 병원의 비밀을 세상에 알릴 시간이다.
+    <div class="doc-modal" id="doc-modal">
+      <div class="doc-title" id="doc-title"></div>
+      <div class="doc-body" id="doc-body"></div>
+      <button class="doc-close" id="doc-close">닫기</button>
+    </div>
+    <div class="dial-modal" id="dial-modal">
+      <div class="dial-title">[ COMBINATION SAFE ]</div>
+      <div class="dial-display" id="dial-display">00</div>
+      <div class="dial-btns">
+        <button class="dial-btn" id="dial-left">&larr;</button>
+        <button class="dial-btn" id="dial-right">&rarr;</button>
+        <button class="dial-btn" id="dial-ok">OK</button>
       </div>
-      <div class="win-end">— THE END —</div>
+      <div style="text-align:center;color:#555;font-size:7px;font-family:inherit" id="dial-step">1 / 3</div>
+    </div>
+    <div class="act-overlay" id="act-overlay">
+      <div class="act-title" id="act-title"></div>
+      <div class="act-desc" id="act-desc"></div>
+    </div>
+    <div class="win-screen" id="win-screen">
+      <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
+      <div class="win-text" id="win-text"></div>
+      <div class="win-end" id="win-end">-- THE END --</div>
     </div>
   </div>
   <div class="message-box">
@@ -115,31 +155,303 @@ const ctx = canvas.getContext('2d');
 const sceneWrapper = document.getElementById('scene-wrapper');
 const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
 
+// ===== WEB AUDIO: SOUND ENGINE =====
+let audioCtx = null;
+let bgmStarted = false;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function sfxPickup() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+  o.frequency.linearRampToValueAtTime(1100, audioCtx.currentTime + 0.15);
+  g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.25);
+  o.start(); o.stop(audioCtx.currentTime + 0.25);
+}
+
+function sfxClick() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.value = 200;
+  g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.06);
+  o.start(); o.stop(audioCtx.currentTime + 0.06);
+}
+
+function sfxNumpad() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.value = 440 + Math.random() * 200;
+  g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+  o.start(); o.stop(audioCtx.currentTime + 0.05);
+}
+
+function sfxCorrect() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.1, t + i * 0.1);
+    g.gain.linearRampToValueAtTime(0, t + i * 0.1 + 0.2);
+    o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.2);
+  });
+}
+
+function sfxWrong() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(180, t);
+  o.frequency.linearRampToValueAtTime(80, t + 0.4);
+  g.gain.setValueAtTime(0.12, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.4);
+  o.start(); o.stop(t + 0.4);
+}
+
+function sfxScare() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o1 = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  o1.type = 'sawtooth'; o1.frequency.value = 55;
+  o2.type = 'sawtooth'; o2.frequency.value = 58;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.15, t + 0.05);
+  g.gain.linearRampToValueAtTime(0.08, t + 0.3);
+  g.gain.linearRampToValueAtTime(0, t + 0.8);
+  o1.start(); o2.start(); o1.stop(t + 0.8); o2.stop(t + 0.8);
+  const o3 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o3.connect(g2); g2.connect(audioCtx.destination);
+  o3.type = 'sine';
+  o3.frequency.setValueAtTime(2000, t);
+  o3.frequency.linearRampToValueAtTime(3500, t + 0.15);
+  o3.frequency.linearRampToValueAtTime(1800, t + 0.5);
+  g2.gain.setValueAtTime(0, t);
+  g2.gain.linearRampToValueAtTime(0.06, t + 0.03);
+  g2.gain.linearRampToValueAtTime(0, t + 0.5);
+  o3.start(); o3.stop(t + 0.5);
+}
+
+function sfxPower() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(60, t);
+  o.frequency.linearRampToValueAtTime(120, t + 0.3);
+  o.frequency.setValueAtTime(120, t + 0.3);
+  g.gain.setValueAtTime(0.15, t);
+  g.gain.setValueAtTime(0.12, t + 0.3);
+  g.gain.linearRampToValueAtTime(0.05, t + 1.2);
+  g.gain.linearRampToValueAtTime(0, t + 1.5);
+  o.start(); o.stop(t + 1.5);
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'square';
+  o2.frequency.value = 60;
+  g2.gain.setValueAtTime(0.03, t + 0.2);
+  g2.gain.linearRampToValueAtTime(0.01, t + 1.5);
+  g2.gain.linearRampToValueAtTime(0, t + 1.8);
+  o2.start(t + 0.2); o2.stop(t + 1.8);
+}
+
+function sfxWin() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  [262, 330, 392, 523, 659, 784].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.12, t + i * 0.15);
+    g.gain.linearRampToValueAtTime(0.08, t + i * 0.15 + 0.1);
+    g.gain.linearRampToValueAtTime(0, t + i * 0.15 + 0.35);
+    o.start(t + i * 0.15); o.stop(t + i * 0.15 + 0.35);
+  });
+}
+
+function sfxDoor() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.4, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const pp = i / data.length;
+    data[i] = (Math.random() * 2 - 1) * 0.1 * Math.sin(pp * Math.PI) * (1 + Math.sin(i * 0.02) * 0.5);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'bandpass'; flt.frequency.value = 800; flt.Q.value = 3;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.2, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.4);
+  src.start();
+}
+
+function sfxDrip() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(1200, t);
+  o.frequency.exponentialRampToValueAtTime(400, t + 0.08);
+  g.gain.setValueAtTime(0.04, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.1);
+  o.start(); o.stop(t + 0.1);
+}
+
+// ===== AMBIENT BACKGROUND MUSIC =====
+let bgmNodes = [];
+function startBGM() {
+  if (bgmStarted) return;
+  ensureAudio();
+  bgmStarted = true;
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.035;
+  masterGain.connect(audioCtx.destination);
+  function makeDrone(freq, type, detune, filterFreq) {
+    const o = audioCtx.createOscillator();
+    const f = audioCtx.createBiquadFilter();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq; o.detune.value = detune;
+    f.type = 'lowpass'; f.frequency.value = filterFreq; f.Q.value = 1;
+    o.connect(f); f.connect(g); g.connect(masterGain);
+    g.gain.value = 0.8;
+    o.start();
+    bgmNodes.push(o, f, g);
+    return { osc: o, gain: g, filter: f };
+  }
+  makeDrone(55, 'sawtooth', 0, 200);
+  makeDrone(55.5, 'sawtooth', 7, 180);
+  makeDrone(82.4, 'triangle', -5, 300);
+  makeDrone(110, 'sine', 3, 250);
+  makeDrone(164.8, 'sine', 12, 400);
+  makeDrone(155.6, 'sine', -8, 350);
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.type = 'sine'; lfo.frequency.value = 0.08;
+  lfoGain.gain.value = 0.015;
+  lfo.connect(lfoGain);
+  lfoGain.connect(masterGain.gain);
+  lfo.start();
+  bgmNodes.push(lfo, lfoGain, masterGain);
+}
+
+function initAudioOnInteraction() {
+  ensureAudio();
+  startBGM();
+  document.removeEventListener('click', initAudioOnInteraction);
+  document.removeEventListener('touchstart', initAudioOnInteraction);
+}
+document.addEventListener('click', initAudioOnInteraction);
+document.addEventListener('touchstart', initAudioOnInteraction);
+
+// ===== GAME STATE =====
 const G = {
   room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
-  displayScale:1.0, touchFeedback:null,
-  flags:{bed:false,wall:false,lock:false,nurse:false,fuse:false,power:false}
+  displayScale:1.0, touchFeedback:null, act:1,
+  sanity:100, battery:100, docsRead:[], modalOpen:null,
+  dialVal:0, dialSeq:[], dialTarget:[],
+  flags:{bed:false,wall:false,lock:false,nurse:false,
+    r3_desk:false,r3_cabinet:false,r3_doc1:false,
+    r4_monitor:false,r4_safe:false,r4_powered:false,
+    r5_grate:false,r5_valve:false,
+    r6_doc2:false,r6_corpse:false,
+    r7_table:false,r7_formula:false,r7_mix:false,
+    r8_shelf:false,r8_safe2:false,
+    r9_gate:false,
+    r10_boiler:false,r10_steam:false,
+    r11_door:false,r11_badge:false}
 };
 
 const ITEMS = {
   key:{name:'녹슨 열쇠',desc:'낡고 녹슨 열쇠. 어딘가의 자물쇠에 맞을 것 같다.'},
   note:{name:'피 묻은 메모',desc:"'내 번호를 기억해. 4 - 7 - 2 - 9' 라고 적혀있다."},
   card:{name:'직원 키카드',desc:'세인트 머시 병원 직원용 키카드. 전자 잠금장치에 사용 가능.'},
-  fuse:{name:'퓨즈',desc:'오래된 퓨즈. 퓨즈박스에 설치할 수 있을 것 같다.'}
+  fuse:{name:'퓨즈',desc:'오래된 퓨즈. 퓨즈박스에 설치할 수 있을 것 같다.'},
+  scalpel:{name:'메스',desc:'날카로운 수술용 메스. 무언가를 자르거나 열 수 있다.'},
+  tape:{name:'녹음테이프',desc:'오래된 카세트 테이프. 재생 장치가 있으면 들을 수 있다.'},
+  chemical:{name:'화학약품',desc:'정체불명의 화학약품. 강한 부식성이 있다.'},
+  crowbar:{name:'쇠지렛대',desc:'무거운 쇠지렛대. 무언가를 뜯어낼 수 있다.'},
+  mask:{name:'가스마스크',desc:'낡은 가스마스크. 유독가스로부터 보호해준다.'},
+  badge:{name:'원장 뱃지',desc:'원장의 신분증 뱃지. 최고 보안등급 접근 가능.'},
+  formula:{name:'조합 공식',desc:'화학약품 조합 공식이 적힌 종이.'}
 };
 
-const ROOM_LABELS = {r1:'병실 101호',r2:'복도',r3:'지하실'};
-const ROOM_NUMS = {r1:'ROOM 01',r2:'ROOM 02',r3:'ROOM 03'};
+const DOCS = {
+  doc1:{title:'환자 기록 #101',body:'환자명: [삭제됨]\n입원일: 1987.03.15\n\n증상: 심한 환각, 편집증\n\n특이사항: 3층 실험실에서\n약물 투여 후 증상 악화.\n원장의 직접 지시로\n격리 조치됨.\n\n"이 환자는 프로젝트의\n핵심 피험자이다.\n절대 퇴원시키지 말 것."'},
+  doc2:{title:'간호사 일지',body:'1987.11.22\n\n지하실에서 본 것을\n잊을 수가 없다.\n환자들이... 묶여있었다.\n\n원장은 이것을 \'치료\'라고\n했지만, 그건 거짓말이다.\n\n더 이상 여기서\n일할 수 없다.\n나도 곧 환자가 될 것 같다.'},
+  doc3:{title:'원장 비밀 서신',body:'수신: 본부 연구소장\n발신: 세인트 머시 원장\n\n프로젝트 제네시스 진행상황:\n\n인체 실험 3단계 완료.\nMX-7 약물 반응률 78%.\n사망자 12명, 성공 3명.\n\n성공한 피험자들은\n예상대로 초감각 능력 발현.\n\n추가 피험자 30명 요청.\n자금 지원 필요.'},
+  doc4:{title:'실험 프로토콜 #7',body:'[극비] MX-7 임상시험\n\n투여량: 체중 kg당 0.5ml\n투여 경로: 정맥 주사\n\n부작용:\n- 72시간 내 환각 (100%)\n- 신경 손상 (67%)\n- 심장 정지 (23%)\n- 사망 (18%)\n\n"피험자의 동의는\n필요하지 않음.\n모든 환자는\n자발적 참여자로 기록할 것."'},
+  doc5:{title:'유서',body:'이 글을 읽는 사람에게.\n\n나는 이 병원의 간호사였다.\n아니, 지금은 환자다.\n\n내가 본 것을 말하려 했을 때\n그들은 나를 미쳤다고 했다.\n\n지하 2층의 진실을\n세상에 알려야 한다.\n\n비상구 코드는\n원장실 금고에 있다.\n\n제발... 여기서 나가줘.'},
+  doc6:{title:'응급 탈출 매뉴얼',body:'[직원 전용]\n\n비상 탈출 경로:\n1. 하수도를 통해 보일러실로\n2. 보일러 증기 차단\n3. 비상구 단말기에\n   원장 뱃지 인증\n4. 비상문 개방\n\n주의: 보일러실 진입 전\n반드시 증기 차단 필요.\n키카드 인증 필수.'}
+};
+
+const DARK_ROOMS = ['r6','r9'];
+
+const ROOM_LABELS = {r1:'병실 101호',r2:'복도 A',r3:'의무실',r4:'감시실',r5:'계단실',r6:'지하복도',r7:'실험실',r8:'기록보관소',r9:'하수도',r10:'보일러실',r11:'비상출구'};
+const ROOM_NUMS = {r1:'ROOM 01',r2:'ROOM 02',r3:'ROOM 03',r4:'ROOM 04',r5:'ROOM 05',r6:'ROOM 06',r7:'ROOM 07',r8:'ROOM 08',r9:'ROOM 09',r10:'ROOM 10',r11:'ROOM 11'};
 const ROOM_MSGS = {
   r1:'낡은 병실이다. 쇠 냄새와 습기가 코를 찌른다. 여기서 나가야 한다...',
   r2:'어두운 복도. 형광등이 깜빡인다. 복도 끝에서 시선이 느껴진다...',
-  r3:'지하실이다. 천장에서 물이 새고 있다. 비상구가 보인다!'
+  r3:'의무실이다. 약품 냄새가 진동한다. 책상과 캐비닛이 보인다.',
+  r4:'감시실이다. 여러 대의 모니터가 깜빡이고 있다.',
+  r5:'계단실이다. 아래에서 차가운 바람이 올라온다.',
+  r6:'지하복도다. 어둡고 축축하다. 손전등 없이는 앞이 잘 안 보인다.',
+  r7:'실험실이다. 시험관과 화학약품이 늘어서 있다. 끔찍한 냄새가 난다.',
+  r8:'기록보관소다. 먼지 쌓인 서류 캐비닛이 가득하다.',
+  r9:'하수도다. 무릎까지 오는 물이 차 있다. 어둡고 악취가 심하다.',
+  r10:'보일러실이다. 거대한 보일러에서 열기가 뿜어져 나온다.',
+  r11:'비상출구다! 무거운 철문이 보인다. 거의 다 왔다...'
 };
+const ROOM_ACTS = {r1:1,r2:1,r3:1,r4:1,r5:2,r6:2,r7:2,r8:2,r9:3,r10:3,r11:3};
 
 const NAV_ROUTES = {
   r1:[{label:'복도 →',to:'r2'}],
-  r2:[{label:'← 병실',to:'r1'},{label:'↓ 지하실',to:'r3'}],
-  r3:[{label:'← 복도',to:'r2'}]
+  r2:[{label:'← 병실',to:'r1'},{label:'의무실 →',to:'r3'},{label:'감시실 ↓',to:'r4'}],
+  r3:[{label:'← 복도',to:'r2'}],
+  r4:[{label:'← 복도',to:'r2'},{label:'계단실 ↓',to:'r5',req:()=>G.flags.r4_powered}],
+  r5:[{label:'← 감시실',to:'r4'},{label:'지하복도 ↓',to:'r6'}],
+  r6:[{label:'← 계단실',to:'r5'},{label:'실험실 →',to:'r7'},{label:'기록보관소 ↓',to:'r8'}],
+  r7:[{label:'← 지하복도',to:'r6'}],
+  r8:[{label:'← 지하복도',to:'r6'},{label:'하수도 ↓',to:'r9',req:()=>G.flags.r8_safe2}],
+  r9:[{label:'← 기록보관소',to:'r8'},{label:'보일러실 →',to:'r10',req:()=>G.flags.r9_gate}],
+  r10:[{label:'← 하수도',to:'r9'},{label:'비상출구 →',to:'r11',req:()=>G.flags.r10_steam}],
+  r11:[{label:'← 보일러실',to:'r10'}]
 };
 
 const zones = {
@@ -155,22 +467,89 @@ const zones = {
     {id:'shadow',x:60,y:6,w:40,h:66,tip:'복도 끝...'}
   ],
   r3:[
-    {id:'fbox',x:6,y:14,w:32,h:48,tip:'퓨즈박스'},
-    {id:'exit',x:102,y:2,w:54,h:76,tip:'비상구'}
+    {id:'r3_desk',x:60,y:30,w:50,h:30,tip:'책상'},
+    {id:'r3_cabinet',x:4,y:10,w:30,h:50,tip:'약품 캐비닛'},
+    {id:'r3_doc',x:120,y:14,w:30,h:20,tip:'벽에 붙은 서류'}
+  ],
+  r4:[
+    {id:'r4_monitor',x:10,y:10,w:80,h:40,tip:'감시 모니터'},
+    {id:'r4_safe',x:110,y:30,w:36,h:36,tip:'금고'},
+    {id:'r4_panel',x:4,y:60,w:40,h:18,tip:'전력 패널'}
+  ],
+  r5:[
+    {id:'r5_grate',x:60,y:50,w:40,h:28,tip:'환기구'},
+    {id:'r5_rail',x:20,y:10,w:20,h:60,tip:'난간'}
+  ],
+  r6:[
+    {id:'r6_corpse',x:80,y:40,w:40,h:30,tip:'쓰러진 무언가'},
+    {id:'r6_pipe',x:10,y:4,w:140,h:10,tip:'천장 파이프'},
+    {id:'r6_doc',x:130,y:50,w:20,h:20,tip:'바닥의 서류'}
+  ],
+  r7:[
+    {id:'r7_table',x:30,y:25,w:60,h:35,tip:'실험 테이블'},
+    {id:'r7_shelf',x:4,y:8,w:24,h:50,tip:'약품 선반'},
+    {id:'r7_machine',x:110,y:10,w:40,h:50,tip:'분석 장치'}
+  ],
+  r8:[
+    {id:'r8_shelf',x:4,y:8,w:60,h:60,tip:'서류 캐비닛'},
+    {id:'r8_safe',x:100,y:30,w:40,h:40,tip:'금고'},
+    {id:'r8_desk',x:70,y:50,w:30,h:20,tip:'책상'}
+  ],
+  r9:[
+    {id:'r9_valve',x:10,y:20,w:24,h:24,tip:'밸브'},
+    {id:'r9_gate',x:110,y:10,w:40,h:60,tip:'철문'},
+    {id:'r9_water',x:40,y:60,w:60,h:18,tip:'흐르는 물'}
+  ],
+  r10:[
+    {id:'r10_boiler',x:10,y:8,w:60,h:60,tip:'보일러'},
+    {id:'r10_panel',x:90,y:20,w:30,h:30,tip:'제어 패널'},
+    {id:'r10_shelf',x:130,y:40,w:24,h:30,tip:'선반'}
+  ],
+  r11:[
+    {id:'r11_door',x:40,y:2,w:80,h:76,tip:'비상문'},
+    {id:'r11_terminal',x:130,y:30,w:20,h:24,tip:'보안 단말기'}
   ]
 };
 
 let flickerVal = 1.0;
+let valveClicks = 0;
 
 function p(vx,vy,vw,vh,color){ctx.fillStyle=color;ctx.fillRect(vx*S,vy*S,vw*S,vh*S)}
 
 function setMsg(t){document.getElementById('msg').textContent=t}
 
-function flash(color='#680000'){
+function flash(color){
+  color=color||'#680000';
   const el=document.getElementById('flash');
   el.style.background=color;
   el.style.opacity='0.75';
   setTimeout(()=>el.style.opacity='0',180);
+}
+
+function changeSanity(amt){
+  G.sanity=Math.max(0,Math.min(100,G.sanity+amt));
+  const bar=document.getElementById('san-bar');
+  bar.style.width=G.sanity+'%';
+  if(G.sanity<=20) bar.style.background='#aa3333';
+  else bar.style.background='#3366aa';
+  if(G.sanity<=0) gameOverSanity();
+}
+
+function changeBattery(amt){
+  G.battery=Math.max(0,Math.min(100,G.battery+amt));
+  const bar=document.getElementById('bat-bar');
+  bar.style.width=G.battery+'%';
+  if(G.battery<=20) bar.style.background='#aaaa33';
+  else bar.style.background='#33aa44';
+}
+
+function gameOverSanity(){
+  const ws=document.getElementById('win-screen');
+  document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
+  document.getElementById('win-title').style.color='#aa2222';
+  document.getElementById('win-text').innerHTML='정신이 완전히 무너졌다.<br><br>당신은 세인트 머시 정신병원의<br>새로운 환자가 되었다.<br><br>영원히 이곳에서 나갈 수 없다.';
+  document.getElementById('win-end').textContent='-- 새로운 환자 --';
+  ws.classList.add('open');
 }
 
 function addItem(id){
@@ -208,13 +587,51 @@ function drawItemSprite(c,id){
     x.fillStyle='#dde8ee';x.fillRect(11,9,10,14);
     x.fillStyle='#C8A820';x.fillRect(14,11,4,10);
     x.fillStyle='#aaa';x.fillRect(12,6,8,3);x.fillRect(12,23,8,3);
+  } else if(id==='scalpel'){
+    x.fillStyle='#aab0b8';x.fillRect(6,14,18,3);
+    x.fillStyle='#dde0e8';x.fillRect(6,15,16,1);
+    x.fillStyle='#555';x.fillRect(24,13,6,5);
+    x.fillStyle='#666';x.fillRect(25,14,4,3);
+  } else if(id==='tape'){
+    x.fillStyle='#333';x.fillRect(6,8,20,16);
+    x.fillStyle='#222';x.fillRect(8,10,16,12);
+    x.fillStyle='#555';x.fillRect(10,13,5,5);x.fillRect(17,13,5,5);
+    x.fillStyle='#444';x.fillRect(11,14,3,3);x.fillRect(18,14,3,3);
+    x.fillStyle='#666';x.fillRect(14,15,4,1);
+  } else if(id==='chemical'){
+    x.fillStyle='#224422';x.fillRect(10,6,12,20);
+    x.fillStyle='#336633';x.fillRect(11,7,10,18);
+    x.fillStyle='#555';x.fillRect(12,4,8,3);
+    x.fillStyle='#aaaa00';x.fillRect(12,14,8,4);
+    x.fillStyle='#888800';x.fillRect(14,15,4,2);
+  } else if(id==='crowbar'){
+    x.fillStyle='#555';x.fillRect(4,14,24,3);
+    x.fillStyle='#666';x.fillRect(4,13,6,5);
+    x.fillStyle='#444';x.fillRect(4,11,3,3);
+    x.fillStyle='#555';x.fillRect(26,12,4,2);x.fillRect(28,14,2,4);
+  } else if(id==='mask'){
+    x.fillStyle='#3a4a3a';x.fillRect(8,6,16,18);
+    x.fillStyle='#2a3a2a';x.fillRect(10,8,12,14);
+    x.fillStyle='#1a2a1a';x.fillRect(11,10,4,4);x.fillRect(17,10,4,4);
+    x.fillStyle='#333';x.fillRect(13,16,6,6);
+    x.fillStyle='#444';x.fillRect(14,17,4,4);
+  } else if(id==='badge'){
+    x.fillStyle='#8a7020';x.fillRect(6,6,20,20);
+    x.fillStyle='#aa9030';x.fillRect(7,7,18,18);
+    x.fillStyle='#cc0000';x.fillRect(10,10,12,8);
+    x.fillStyle='#fff';x.fillRect(12,12,8,4);
+    x.fillStyle='#8a7020';x.fillRect(14,22,4,4);
+  } else if(id==='formula'){
+    x.fillStyle='#e0d8c0';x.fillRect(5,4,22,24);
+    x.fillStyle='#a09878';x.fillRect(8,8,16,1);x.fillRect(8,12,14,1);x.fillRect(8,16,16,1);x.fillRect(8,20,10,1);
+    x.fillStyle='#2244aa';x.fillRect(20,18,6,6);
   }
 }
 
 function updateInv(){
   const el=document.getElementById('inv-slots');
   el.innerHTML='';
-  for(let i=0;i<6;i++){
+  for(let i=0;i<8;i++){
     const slot=document.createElement('div');
     slot.className='inv-slot';
     if(i<G.inv.length){
@@ -227,12 +644,20 @@ function updateInv(){
       const tip=document.createElement('span');
       tip.className='inv-tip';tip.textContent=ITEMS[id].name;
       slot.appendChild(tip);
-      slot.addEventListener('click',()=>{
-        if(G.sel===id){G.sel=null;setMsg(ITEMS[id].desc);if(id==='note')setMsg("피 묻은 메모: '내 번호를 기억해. 4 - 7 - 2 - 9'")}
-        else{G.sel=id;setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.');if(id==='note')setMsg("피 묻은 메모 선택됨 — '4 - 7 - 2 - 9' — 사용할 물체를 클릭하세요.")}
+      function onSlotClick(){
+        if(G.sel===id){
+          G.sel=null;
+          if(id==='note') setMsg("[ 피 묻은 메모 ]\n'내 번호를 기억해. 4 - 7 - 2 - 9'");
+          else setMsg(ITEMS[id].desc);
+        } else {
+          G.sel=id;
+          if(id==='note') setMsg("피 묻은 메모 선택됨 - 코드: 4 - 7 - 2 - 9 - 사용할 물체를 클릭하세요.");
+          else setMsg(ITEMS[id].name+' 선택됨 - 사용할 물체를 클릭하세요.');
+        }
         updateInv();
-      });
-      slot.addEventListener('touchend',e=>{e.preventDefault()});
+      }
+      slot.addEventListener('click',onSlotClick);
+      slot.addEventListener('touchend',e=>{e.preventDefault();onSlotClick()});
     }
     el.appendChild(slot);
   }
@@ -251,69 +676,386 @@ function getZone(vx,vy){
 
 function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
 
+// ===== DOCUMENT VIEWER =====
+function openDoc(id){
+  if(!DOCS[id])return;
+  G.modalOpen='doc';
+  if(!G.docsRead.includes(id))G.docsRead.push(id);
+  document.getElementById('doc-title').textContent=DOCS[id].title;
+  document.getElementById('doc-body').textContent=DOCS[id].body;
+  document.getElementById('doc-modal').classList.add('open');
+}
+
+function closeDoc(){
+  G.modalOpen=null;
+  document.getElementById('doc-modal').classList.remove('open');
+}
+
+document.getElementById('doc-close').addEventListener('click',closeDoc);
+
+// ===== DIAL SAFE =====
+function openDial(target){
+  G.modalOpen='dial';
+  G.dialVal=0;
+  G.dialSeq=[];
+  G.dialTarget=target;
+  document.getElementById('dial-modal').classList.add('open');
+  updateDialDisplay();
+}
+
+function closeDial(){
+  G.modalOpen=null;
+  document.getElementById('dial-modal').classList.remove('open');
+}
+
+function updateDialDisplay(){
+  document.getElementById('dial-display').textContent=String(G.dialVal).padStart(2,'0');
+  document.getElementById('dial-step').textContent=(G.dialSeq.length+1)+' / '+G.dialTarget.length;
+}
+
+document.getElementById('dial-left').addEventListener('click',()=>{
+  G.dialVal=(G.dialVal-1+50)%50;
+  sfxNumpad();updateDialDisplay();
+});
+document.getElementById('dial-right').addEventListener('click',()=>{
+  G.dialVal=(G.dialVal+1)%50;
+  sfxNumpad();updateDialDisplay();
+});
+document.getElementById('dial-ok').addEventListener('click',()=>{
+  G.dialSeq.push(G.dialVal);
+  if(G.dialSeq.length>=G.dialTarget.length){
+    let ok=true;
+    for(let i=0;i<G.dialTarget.length;i++){if(G.dialSeq[i]!==G.dialTarget[i])ok=false}
+    if(ok){
+      sfxCorrect();
+      setTimeout(()=>{
+        closeDial();
+        G.flags.r4_safe=true;
+        addItem('tape');flash('#004400');sfxPickup();
+        setMsg('금고가 열렸다! 오래된 녹음테이프가 있다. [녹음테이프 획득]');
+      },300);
+    } else {
+      sfxWrong();flash();setMsg('조합이 틀렸다.');
+      G.dialSeq=[];G.dialVal=0;updateDialDisplay();
+    }
+  } else {
+    G.dialVal=0;updateDialDisplay();
+    sfxClick();
+  }
+});
+
+// ===== ACT TRANSITIONS =====
+function showActTitle(act){
+  G.modalOpen='act';
+  const titles={1:'Act 1: 감금',2:'Act 2: 진실',3:'Act 3: 탈출'};
+  const descs={1:'세인트 머시 정신병원 1층',2:'지하에 숨겨진 비밀',3:'최후의 탈출'};
+  document.getElementById('act-title').textContent=titles[act]||'';
+  document.getElementById('act-desc').textContent=descs[act]||'';
+  document.getElementById('act-overlay').classList.add('open');
+  setTimeout(()=>{
+    document.getElementById('act-overlay').classList.remove('open');
+    G.modalOpen=null;
+  },2500);
+}
+
+// ===== ENDING SYSTEM =====
+function showEnding(){
+  const ws=document.getElementById('win-screen');
+  if(G.sanity<=0){
+    document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
+    document.getElementById('win-title').style.color='#aa2222';
+    document.getElementById('win-text').innerHTML='정신이 완전히 무너졌다.<br><br>당신은 세인트 머시 정신병원의<br>새로운 환자가 되었다.';
+    document.getElementById('win-end').textContent='-- 새로운 환자 --';
+  } else if(G.docsRead.length<3){
+    document.getElementById('win-title').innerHTML='&#9654; NORMAL END &#9664;';
+    document.getElementById('win-title').style.color='#888828';
+    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>세인트 머시 정신병원에서 탈출.<br><br>살아서 나왔지만...<br>이 병원의 진실은 여전히 묻혀있다.<br><br>당신은 아무것도 증명할 수 없다.';
+    document.getElementById('win-end').textContent='-- 탈출 --';
+  } else {
+    document.getElementById('win-title').innerHTML='&#9654; TRUE END &#9664;';
+    document.getElementById('win-title').style.color='#288828';
+    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>세인트 머시 정신병원에서 탈출.<br><br>손에는 20년간 묻혀있던<br>진실이 담긴 문서들.<br><br>프로젝트 제네시스의 인체실험,<br>사라진 환자들, 그리고 원장의 범죄.<br><br>이 병원의 비밀을 세상에 알릴 시간이다.';
+    document.getElementById('win-end').textContent='-- 진실 폭로 --';
+  }
+  sfxWin();
+  ws.classList.add('open');
+}
+
+// ===== HANDLE CLICK =====
 function handleClick(id){
   if(G.room==='r1'){
     if(id==='bed'){
-      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
+      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();sfxPickup();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
       else setMsg('이미 뒤져봤다. 매트리스 아래에는 더 이상 없다.');
     } else if(id==='drawer'){
       setMsg('서랍을 당겨보니 잠겨있다. 자물쇠가 있지만 이 열쇠는 맞지 않는 것 같다.');
     } else if(id==='window'){
       setMsg('창살이 달린 창문이다. 달빛이 들어온다. 밖은 짙은 안개로 덮여있다. 탈출할 수 없다.');
     } else if(id==='hand'){
-      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
+      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();sfxPickup();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
       else setMsg('핏자국이다. 메모지는 이미 챙겼다.');
     }
   } else if(G.room==='r2'){
     if(id==='locker'){
       if(!G.flags.lock){
-        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
-        else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
+        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();sfxPickup();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
+        else{
+          if(G.inv.includes('key')) setMsg('낡은 자물쇠가 달려있다. 인벤토리에서 열쇠를 선택한 후 이곳을 다시 클릭하세요.');
+          else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
+        }
       } else setMsg('이미 열린 사물함이다. 텅 비어있다.');
     } else if(id==='nurse'){
       if(G.flags.nurse){setMsg('이미 열린 캐비닛이다.');return}
       if(!G.inv.includes('note')){setMsg('비밀번호 잠금장치가 있다. 번호를 어딘가에서 찾아야 할 것 같다...');return}
       openCodePad();
     } else if(id==='shadow'){
-      flash();
+      flash();sfxScare();changeSanity(-5);
       setMsg('복도 끝이 어둠에 잠겨있다... 뭔가가 움직인 것 같기도 하다.');
       setTimeout(()=>setMsg('쿵! 복도 어딘가에서 소리가 났다. 빨리 탈출해야 한다.'),700);
     }
   } else if(G.room==='r3'){
-    if(id==='fbox'){
-      if(G.flags.fuse){setMsg('퓨즈가 이미 설치되어 있다. 전력이 흐르고 있다.');return}
-      if(G.sel==='fuse'){G.flags.fuse=true;G.flags.power=true;removeItem('fuse');flash('#004400');G.sel=null;setMsg('퓨즈를 설치했다! 비상구 전자 잠금장치에 전력이 공급되었다!')}
-      else setMsg('퓨즈박스. 퓨즈가 빠져있어 전력이 차단된 상태다. 맞는 퓨즈가 필요하다.');
-    } else if(id==='exit'){
-      if(!G.flags.power){setMsg('전자 잠금장치가 작동하지 않는다. 먼저 전력을 복구해야 한다.');return}
-      if(G.sel==='card'){
-        G.sel=null;updateInv();
-        setMsg('키카드를 단말기에 대자 잠금장치가 해제된다. 문이 열렸다! 탈출이다!!!');
-        setTimeout(()=>document.getElementById('win-screen').classList.add('open'),400);
-      } else if(G.inv.includes('card')){
-        setMsg('키카드 단말기가 보인다. 인벤토리에서 키카드를 선택해 사용하세요.');
+    if(id==='r3_desk'){
+      if(!G.flags.r3_desk){G.flags.r3_desk=true;addItem('scalpel');flash();sfxPickup();setMsg('책상 서랍에서 메스를 발견했다! [메스 획득]')}
+      else setMsg('책상에는 더 이상 쓸만한 것이 없다.');
+    } else if(id==='r3_cabinet'){
+      if(!G.flags.r3_cabinet){
+        if(G.sel==='scalpel'){G.flags.r3_cabinet=true;removeItem('scalpel');addItem('chemical');flash();sfxPickup();G.sel=null;setMsg('메스로 캐비닛 잠금장치를 따냈다! 화학약품을 발견했다. [화학약품 획득]')}
+        else{
+          if(G.inv.includes('scalpel')) setMsg('잠긴 약품 캐비닛. 인벤토리에서 메스를 선택해 잠금장치를 따보자.');
+          else setMsg('잠긴 약품 캐비닛. 뭔가 날카로운 것으로 열 수 있을 것 같다.');
+        }
+      } else setMsg('이미 열린 캐비닛이다.');
+    } else if(id==='r3_doc'){
+      if(!G.flags.r3_doc1){G.flags.r3_doc1=true;openDoc('doc1');setMsg('벽에 붙은 환자 기록을 읽었다...')}
+      else{openDoc('doc1');setMsg('이미 읽은 환자 기록이다.')}
+    }
+  } else if(G.room==='r4'){
+    if(id==='r4_monitor'){
+      if(!G.flags.r4_monitor){
+        G.flags.r4_monitor=true;flash();sfxScare();changeSanity(-8);
+        setMsg('모니터에 병실들이 비친다... 한 화면에서 무언가가 카메라를 쳐다보고 있다!');
+      } else setMsg('모니터들이 깜빡인다. 더 이상 보고 싶지 않다.');
+    } else if(id==='r4_safe'){
+      if(!G.flags.r4_safe){
+        openDial([15,42,8]);
+        setMsg('다이얼 금고다. 3자리 조합을 입력해야 한다.');
+      } else setMsg('이미 열린 금고다.');
+    } else if(id==='r4_panel'){
+      if(!G.flags.r4_powered){
+        if(G.sel==='fuse'){G.flags.r4_powered=true;removeItem('fuse');flash('#004400');sfxPower();G.sel=null;setMsg('퓨즈를 설치했다! 지하로 가는 문의 전자 잠금이 해제되었다!')}
+        else{
+          if(G.inv.includes('fuse')) setMsg('전력 패널. 퓨즈가 빠져있다. 인벤토리에서 퓨즈를 선택하세요.');
+          else setMsg('전력 패널. 퓨즈가 빠져있어 지하 통로가 잠겨있다.');
+        }
+      } else setMsg('전력이 정상적으로 공급되고 있다.');
+    }
+  } else if(G.room==='r5'){
+    if(id==='r5_grate'){
+      if(!G.flags.r5_grate){
+        if(G.sel==='crowbar'){G.flags.r5_grate=true;removeItem('crowbar');addItem('mask');flash();sfxPickup();G.sel=null;setMsg('쇠지렛대로 환기구를 뜯어냈다! 안에서 가스마스크를 발견했다. [가스마스크 획득]')}
+        else{
+          if(G.inv.includes('crowbar')) setMsg('환기구가 단단히 고정되어 있다. 쇠지렛대를 선택해서 뜯어내자.');
+          else setMsg('환기구가 단단히 고정되어 있다. 뜯어낼 도구가 필요하다.');
+        }
+      } else setMsg('이미 뜯어낸 환기구다. 텅 비어있다.');
+    } else if(id==='r5_rail'){
+      changeSanity(-3);
+      setMsg('난간 너머 아래를 내려다본다. 끝이 보이지 않는 어둠... 현기증이 난다.');
+    }
+  } else if(G.room==='r6'){
+    if(id==='r6_corpse'){
+      if(!G.flags.r6_corpse){G.flags.r6_corpse=true;addItem('crowbar');flash();sfxScare();sfxPickup();changeSanity(-15);setMsg('시체다...! 옆에 쇠지렛대가 있다. 떨리는 손으로 집어든다. [쇠지렛대 획득]')}
+      else setMsg('... 더 이상 보고 싶지 않다.');
+    } else if(id==='r6_pipe'){
+      setMsg('녹슨 파이프에서 물이 새고 있다. 차가운 물방울이 목덜미에 떨어진다.');
+    } else if(id==='r6_doc'){
+      if(!G.flags.r6_doc2){G.flags.r6_doc2=true;openDoc('doc2');setMsg('바닥에 떨어진 간호사 일지를 주웠다...')}
+      else{openDoc('doc2');setMsg('이미 읽은 간호사 일지다.')}
+    }
+  } else if(G.room==='r7'){
+    if(id==='r7_shelf'){
+      if(!G.flags.r7_formula){G.flags.r7_formula=true;addItem('formula');flash();sfxPickup();setMsg('선반에서 조합 공식을 발견했다! [조합 공식 획득]')}
+      else setMsg('선반에는 깨진 시험관뿐이다.');
+    } else if(id==='r7_table'){
+      if(!G.flags.r7_table){G.flags.r7_table=true;setMsg('실험 테이블 위에 묶인 자국이 있다. 사람을... 묶어놓았던 것 같다.');}
+      else setMsg('끔찍한 실험 테이블이다.');
+    } else if(id==='r7_machine'){
+      if(G.sel==='tape'){
+        removeItem('tape');G.sel=null;flash();changeSanity(-10);
+        openDoc('doc4');
+        setMsg('테이프를 재생했다. 실험 프로토콜이 흘러나온다... 끔찍하다.');
       } else {
-        setMsg('전자식 키카드 단말기가 있다. 직원 키카드가 필요하다.');
+        if(G.inv.includes('tape')) setMsg('분석 장치에 테이프 재생 기능이 있다. 테이프를 선택해서 넣어보자.');
+        else setMsg('오래된 분석 장치다. 테이프 슬롯이 있다.');
+      }
+    }
+  } else if(G.room==='r8'){
+    if(id==='r8_shelf'){
+      if(!G.flags.r8_shelf){G.flags.r8_shelf=true;openDoc('doc5');setMsg('서류 더미에서 유서를 발견했다...')}
+      else setMsg('더 이상 찾을 것이 없는 서류 더미다.');
+    } else if(id==='r8_safe'){
+      if(!G.flags.r8_safe2){
+        if(G.sel==='chemical'){G.flags.r8_safe2=true;removeItem('chemical');flash('#004400');sfxPower();G.sel=null;openDoc('doc6');setMsg('화학약품으로 금고 잠금장치를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
+        else{
+          if(G.inv.includes('chemical')) setMsg('금고가 단단히 잠겨있다. 화학약품으로 부식시킬 수 있을 것 같다.');
+          else setMsg('금고가 단단히 잠겨있다. 강한 부식제가 필요하다.');
+        }
+      } else setMsg('이미 열린 금고다.');
+    } else if(id==='r8_desk'){
+      changeSanity(-8);
+      openDoc('doc3');
+      setMsg('책상 위에 원장의 비밀 서신이 있다... 소름이 끼친다.');
+    }
+  } else if(G.room==='r9'){
+    if(id==='r9_valve'){
+      valveClicks++;
+      if(valveClicks>=2&&!G.flags.r9_gate){
+        G.flags.r9_gate=true;flash('#004400');sfxPower();
+        setMsg('밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
+      } else if(!G.flags.r9_gate){
+        sfxClick();setMsg('밸브가 뻑뻑하다. 한 번 더 돌려야 할 것 같다. ('+valveClicks+'/2)');
+      } else setMsg('밸브는 이미 완전히 열려있다.');
+    } else if(id==='r9_gate'){
+      if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
+      else setMsg('무거운 철문이 잠겨있다. 밸브로 수문을 열어야 한다.');
+    } else if(id==='r9_water'){
+      changeSanity(-2);
+      setMsg('탁한 물 속에서 뭔가 스쳐간다... 무엇이었는지는 알고 싶지 않다.');
+    }
+  } else if(G.room==='r10'){
+    if(id==='r10_boiler'){
+      if(!G.flags.r10_boiler){G.flags.r10_boiler=true;flash();sfxScare();changeSanity(-5);setMsg('보일러 앞에서 끔찍한 환각이 보인다. 불꽃 속에서 얼굴들이...')}
+      else setMsg('거대한 보일러. 열기가 대단하다.');
+    } else if(id==='r10_panel'){
+      if(!G.flags.r10_steam){
+        if(G.sel==='card'){G.flags.r10_steam=true;removeItem('card');flash('#004400');sfxPower();G.sel=null;setMsg('키카드로 제어 패널을 작동시켰다! 증기가 차단되고 비상출구로의 길이 열렸다!')}
+        else{
+          if(G.inv.includes('card')) setMsg('제어 패널. 키카드 슬롯이 있다. 키카드를 선택하세요.');
+          else setMsg('제어 패널. 키카드 인증이 필요하다.');
+        }
+      } else setMsg('증기가 차단된 상태다.');
+    } else if(id==='r10_shelf'){
+      if(!G.flags.r11_badge){G.flags.r11_badge=true;addItem('badge');flash();sfxPickup();setMsg('선반에서 원장 뱃지를 발견했다! [원장 뱃지 획득]')}
+      else setMsg('선반에는 더 이상 아무것도 없다.');
+    }
+  } else if(G.room==='r11'){
+    if(id==='r11_terminal'){
+      if(!G.flags.r11_door){
+        if(G.sel==='badge'){G.flags.r11_door=true;removeItem('badge');flash('#004400');sfxPower();G.sel=null;setMsg('원장 뱃지로 인증 성공! 비상문 잠금이 해제되었다! 문을 열어라!')}
+        else{
+          if(G.inv.includes('badge')) setMsg('보안 단말기. 원장 뱃지를 선택해서 인증하세요.');
+          else setMsg('보안 단말기. 최고 보안등급 인증이 필요하다.');
+        }
+      } else setMsg('이미 인증되었다. 문을 열 수 있다!');
+    } else if(id==='r11_door'){
+      if(G.flags.r11_door){
+        setMsg('비상문이 열린다... 차가운 바깥 공기가 밀려들어온다. 탈출이다!!!');
+        setTimeout(()=>showEnding(),800);
+      } else {
+        setMsg('비상문이 굳게 잠겨있다. 보안 단말기에서 인증이 필요하다.');
       }
     }
   }
 }
 
+// ===== CODE PAD =====
+function openCodePad(){
+  G.pad=true;G.code='';G.modalOpen='code';
+  document.getElementById('code-modal').classList.add('open');
+  document.getElementById('code-display').textContent='_ _ _ _';
+  document.getElementById('code-led').className='code-led';
+}
+
+function closeCodePad(){
+  G.pad=false;G.code='';G.modalOpen=null;
+  document.getElementById('code-modal').classList.remove('open');
+}
+
+function updateCodeDisplay(){
+  let d='';
+  for(let i=0;i<4;i++)d+=(i<G.code.length?G.code[i]:'_')+(i<3?' ':'');
+  document.getElementById('code-display').textContent=d;
+}
+
+function setupNumpad(){
+  const grid=document.getElementById('code-grid');
+  for(let i=1;i<=9;i++){
+    const b=document.createElement('button');b.className='num-btn';b.textContent=i;
+    b.addEventListener('click',()=>{if(G.code.length<4){G.code+=i;updateCodeDisplay();sfxNumpad()}});
+    grid.appendChild(b);
+  }
+  const z=document.createElement('button');z.className='num-btn zero';z.textContent='0';
+  z.addEventListener('click',()=>{if(G.code.length<4){G.code+='0';updateCodeDisplay();sfxNumpad()}});
+  grid.appendChild(z);
+}
+
+function setupCodePadEvents(){
+  document.getElementById('btn-del').addEventListener('click',()=>{G.code=G.code.slice(0,-1);updateCodeDisplay()});
+  document.getElementById('btn-ok').addEventListener('click',()=>{
+    if(G.code==='4729'){
+      document.getElementById('code-led').className='code-led correct';
+      sfxCorrect();setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');sfxPickup();setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
+    } else {
+      document.getElementById('code-led').className='code-led wrong';
+      sfxWrong();flash();setMsg('비밀번호가 틀렸다.');
+      setTimeout(()=>{G.code='';updateCodeDisplay();document.getElementById('code-led').className='code-led'},700);
+    }
+  });
+  document.getElementById('btn-cancel').addEventListener('click',()=>{closeCodePad();setMsg(ROOM_MSGS[G.room])});
+}
+
+// ===== NAVIGATION =====
+function goRoom(id){
+  const newAct=ROOM_ACTS[id];
+  if(newAct!==G.act){
+    G.act=newAct;
+    showActTitle(newAct);
+  }
+  G.room=id;G.pad=false;G.sel=null;
+  closeCodePad();sfxDoor();
+  document.getElementById('room-label').textContent=ROOM_LABELS[id];
+  document.getElementById('room-num').textContent=ROOM_NUMS[id];
+  setMsg(ROOM_MSGS[id]);
+  updateInv();setupNav();
+}
+
+function setupNav(){
+  const el=document.getElementById('nav-area');el.innerHTML='';
+  const isMobile=window.innerWidth<640;
+  (NAV_ROUTES[G.room]||[]).forEach(n=>{
+    const b=document.createElement('button');b.className='nav-btn';b.textContent=n.label;
+    if(isMobile){b.style.flex='1';b.style.minHeight='48px'}
+    const locked=n.req&&!n.req();
+    if(locked){
+      b.classList.add('locked');
+      b.addEventListener('click',()=>{sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
+      b.addEventListener('touchend',e=>{e.preventDefault();sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
+    } else {
+      b.addEventListener('click',()=>goRoom(n.to));
+      b.addEventListener('touchend',e=>{e.preventDefault();goRoom(n.to)});
+    }
+    el.appendChild(b);
+  });
+  if(isMobile){el.style.right='0';el.style.left='0';el.style.bottom='0';el.style.display='flex'}
+  else{el.style.right='10px';el.style.left='';el.style.bottom='10px'}
+}
+
+// ===== EVENT HANDLERS =====
 canvas.addEventListener('click',e=>{
-  if(G.pad)return;
+  if(G.pad||G.modalOpen)return;
   const{vx,vy}=getVirtualCoords(e.clientX,e.clientY);
   const z=getZone(vx,vy);
   if(!z){if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.');return}
-  handleClick(z.id);
+  sfxClick();handleClick(z.id);
 });
 
 canvas.addEventListener('touchstart',e=>{
   e.preventDefault();
-  if(G.pad)return;
+  if(G.pad||G.modalOpen)return;
   const t=e.changedTouches[0];
   const{vx,vy}=getVirtualCoords(t.clientX,t.clientY);
   const z=getZone(vx,vy);
-  if(z){showTouchFeedback(z);handleClick(z.id)}
+  if(z){showTouchFeedback(z);sfxClick();handleClick(z.id)}
   else{if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.')}
 },{passive:false});
 
@@ -332,74 +1074,7 @@ canvas.addEventListener('mousemove',e=>{
 });
 canvas.addEventListener('mouseleave',()=>{document.getElementById('hover-tip').style.display='none'});
 
-function openCodePad(){
-  G.pad=true;G.code='';
-  document.getElementById('code-modal').classList.add('open');
-  document.getElementById('code-display').textContent='_ _ _ _';
-  document.getElementById('code-led').className='code-led';
-}
-
-function closeCodePad(){
-  G.pad=false;G.code='';
-  document.getElementById('code-modal').classList.remove('open');
-}
-
-function updateCodeDisplay(){
-  let d='';
-  for(let i=0;i<4;i++)d+=(i<G.code.length?G.code[i]:'_')+(i<3?' ':'');
-  document.getElementById('code-display').textContent=d;
-}
-
-function setupNumpad(){
-  const grid=document.getElementById('code-grid');
-  for(let i=1;i<=9;i++){
-    const b=document.createElement('button');b.className='num-btn';b.textContent=i;
-    b.addEventListener('click',()=>{if(G.code.length<4){G.code+=i;updateCodeDisplay()}});
-    grid.appendChild(b);
-  }
-  const z=document.createElement('button');z.className='num-btn zero';z.textContent='0';
-  z.addEventListener('click',()=>{if(G.code.length<4){G.code+='0';updateCodeDisplay()}});
-  grid.appendChild(z);
-}
-
-function setupCodePadEvents(){
-  document.getElementById('btn-del').addEventListener('click',()=>{G.code=G.code.slice(0,-1);updateCodeDisplay()});
-  document.getElementById('btn-ok').addEventListener('click',()=>{
-    if(G.code==='4729'){
-      document.getElementById('code-led').className='code-led correct';
-      setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
-    } else {
-      document.getElementById('code-led').className='code-led wrong';
-      flash();setMsg('비밀번호가 틀렸다.');
-      setTimeout(()=>{G.code='';updateCodeDisplay();document.getElementById('code-led').className='code-led'},700);
-    }
-  });
-  document.getElementById('btn-cancel').addEventListener('click',()=>{closeCodePad();setMsg(ROOM_MSGS[G.room])});
-}
-
-function goRoom(id){
-  G.room=id;G.pad=false;G.sel=null;
-  closeCodePad();
-  document.getElementById('room-label').textContent=ROOM_LABELS[id];
-  document.getElementById('room-num').textContent=ROOM_NUMS[id];
-  setMsg(ROOM_MSGS[id]);
-  updateInv();setupNav();
-}
-
-function setupNav(){
-  const el=document.getElementById('nav-area');el.innerHTML='';
-  const isMobile=window.innerWidth<640;
-  (NAV_ROUTES[G.room]||[]).forEach(n=>{
-    const b=document.createElement('button');b.className='nav-btn';b.textContent=n.label;
-    if(isMobile){b.style.flex='1';b.style.minHeight='48px'}
-    b.addEventListener('click',()=>goRoom(n.to));
-    b.addEventListener('touchend',e=>{e.preventDefault();goRoom(n.to)});
-    el.appendChild(b);
-  });
-  if(isMobile){el.style.right='0';el.style.left='0';el.style.bottom='0';el.style.display='flex'}
-  else{el.style.right='10px';el.style.left='';el.style.bottom='10px'}
-}
-
+// ===== RESIZE =====
 function resizeGame(){
   const cw=Math.min(window.innerWidth,640);
   const sc=cw/640;const dh=Math.round(360*sc);
@@ -426,6 +1101,15 @@ function updateFlicker(){
     setTimeout(()=>flickerVal=0.7+Math.random()*0.28,70+Math.random()*110);
     setTimeout(()=>flickerVal=0.1+Math.random()*0.25,190+Math.random()*80);
     setTimeout(()=>flickerVal=1.0,330+Math.random()*120);
+  }
+}
+
+// ===== TOUCH FEEDBACK =====
+function drawTouchFeedback(){
+  if(G.touchFeedback&&G.t<G.touchFeedback.until){
+    const z=G.touchFeedback.zone;
+    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
+    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
   }
 }
 
@@ -520,12 +1204,7 @@ function drawRoom1(fv){
   // Floor details
   p(20,74,3,1,'#141018');p(80,76,4,1,'#141018');p(120,73,2,1,'#141018');
 
-  // Touch feedback
-  if(G.touchFeedback&&G.t<G.touchFeedback.until){
-    const z=G.touchFeedback.zone;
-    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
-    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
-  }
+  drawTouchFeedback();
 }
 
 function drawRoom2(fv,t){
@@ -536,10 +1215,8 @@ function drawRoom2(fv,t){
 
   // Perspective corridor walls
   ctx.save();
-  // Left wall
   ctx.fillStyle='#1c1422';
   ctx.beginPath();ctx.moveTo(0,4*S);ctx.lineTo(0,72*S);ctx.lineTo(68*S,72*S);ctx.lineTo(73*S,4*S);ctx.closePath();ctx.fill();
-  // Right wall
   ctx.beginPath();ctx.moveTo(160*S,4*S);ctx.lineTo(160*S,72*S);ctx.lineTo(92*S,72*S);ctx.lineTo(87*S,4*S);ctx.closePath();ctx.fill();
   ctx.restore();
 
@@ -573,11 +1250,9 @@ function drawRoom2(fv,t){
     const lw=18-t2*10;
     const lh=36-t2*18;
     const bright=1-t2*0.5;
-    const r=Math.floor(30*bright),g=Math.floor(44*bright),b=Math.floor(34*bright);
-    p(lx,ly,lw,lh,`rgb(${r},${g},${b})`);
-    // Locker door line
-    p(lx+lw/2-0.5,ly+1,1,lh-2,`rgb(${r-8},${g-8},${b-8})`);
-    // Handle
+    const r=Math.floor(30*bright),gg=Math.floor(44*bright),b=Math.floor(34*bright);
+    p(lx,ly,lw,lh,'rgb('+r+','+gg+','+b+')');
+    p(lx+lw/2-0.5,ly+1,1,lh-2,'rgb('+(r-8)+','+(gg-8)+','+(b-8)+')');
     p(lx+lw/2+2,ly+lh/2,Math.max(1,lw*0.1),Math.max(1,lh*0.05),'#555');
     if(i===0&&G.flags.lock){
       p(lx+1,ly+1,lw-2,lh-2,'#0a1a0e');
@@ -606,9 +1281,7 @@ function drawRoom2(fv,t){
   ctx.save();
   ctx.globalAlpha=0.22+Math.sin(t*0.0008)*0.07;
   ctx.fillStyle='#000000';
-  // Body
   ctx.fillRect(sx*S,26*S,11*S,34*S);
-  // Head
   ctx.fillRect((sx+1)*S,18*S,9*S,10*S);
   ctx.restore();
 
@@ -618,162 +1291,652 @@ function drawRoom2(fv,t){
   for(let i=0;i<5;i++){p(155-i*12,12+i*8,1,48-i*7,'#0a0810')}
   ctx.restore();
 
-  // Touch feedback
-  if(G.touchFeedback&&G.t<G.touchFeedback.until){
-    const z=G.touchFeedback.zone;
-    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
-    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
-  }
+  drawTouchFeedback();
 }
 
 function drawRoom3(fv,t){
-  // Floor
+  // Floor - tile pattern
   p(0,72,160,18,'#0c0a10');
+  for(let i=0;i<10;i++)for(let j=0;j<2;j++){
+    p(i*16,72+j*9,15,8,(i+j)%2===0?'#100e16':'#0e0c14');
+  }
   // Ceiling
   p(0,0,160,4,'#0a0810');
-  // Walls (concrete)
-  p(0,4,160,68,'#18161e');
-  // Concrete texture
-  for(let i=0;i<20;i++){
-    p(i*8+2,4+Math.floor(i*3.7)%60,1,2,'#1a181f');
+  // Walls
+  p(0,4,160,68,'#1e1828');
+  // Wall tiles (medical room)
+  for(let i=0;i<20;i++)for(let j=0;j<4;j++){
+    p(i*8,4+j*17,7,16,(i+j)%2===0?'#201a2a':'#1e182a');
   }
-  // Wall cracks
-  ctx.strokeStyle='#1e1c24';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(45*S,10*S);ctx.lineTo(47*S,35*S);ctx.lineTo(44*S,55*S);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(90*S,8*S);ctx.lineTo(92*S,28*S);ctx.stroke();
+  // Baseboard
+  p(0,70,160,2,'#14101c');
 
-  // Ceiling pipes
-  p(12,0,136,3,'#303038');
-  p(12,0,136,1,'#383840');
-  // Pipe supports
-  p(14,0,2,5,'#282830');p(78,0,2,5,'#282830');p(134,0,2,5,'#282830');
-  // Pipe joints
-  p(40,1,4,2,'#3a3a42');p(100,1,4,2,'#3a3a42');
-
-  // Water drip
-  const drip=(t*0.0014)%1;
-  if(drip<0.78){
-    const dy=2+Math.round(drip*70);
-    p(80,dy,1,2,'#1830a0');
-    if(drip>0.1)p(80,dy-3,1,1,'#1020708');
-  }
-
-  // Water puddle
-  ctx.save();ctx.globalAlpha=0.2;p(32,74,96,8,'#1830a0');ctx.restore();
-  ctx.save();ctx.globalAlpha=0.1;p(36,75,88,6,'#2040b0');ctx.restore();
-
-  // Water ripples
-  const rip=(t*0.0016)%1;
-  ctx.save();ctx.strokeStyle='#3050c0';ctx.lineWidth=0.5;
-  for(let i=0;i<3;i++){
-    const radius=((rip+i*0.38)%1)*24;
-    ctx.globalAlpha=0.12*(1-((rip+i*0.38)%1));
-    ctx.beginPath();ctx.ellipse(80*S,78*S,radius*S,radius*S*0.22,0,0,Math.PI*2);ctx.stroke();
-  }
-  ctx.restore();
-
-  // Fuse box
-  p(7,16,30,44,'#252830');p(8,17,28,42,'#1e2228');
-  // Fuse box door frame
-  p(7,16,30,1,'#353840');p(7,59,30,1,'#353840');p(7,16,1,44,'#353840');p(36,16,1,44,'#353840');
-  // Handle
-  p(33,36,2,6,'#555');
-  // Internal fuse slots (3x2)
-  for(let row=0;row<2;row++){
-    for(let col=0;col<3;col++){
-      const fx=10+col*9;const fy=22+row*16;
-      p(fx,fy,6,11,'#0a0c10');
-      if(G.flags.fuse&&row===0&&col===1){
-        // Installed fuse
-        p(fx+1,fy+1,4,9,'#dde8ee');
-        p(fx+2,fy+3,2,5,'#C8A820');
-        p(fx,fy+10,6,2,'#00aa00');
-      } else {
-        p(fx+2,fy+4,2,3,'#3a0000');
-      }
-    }
-  }
-  // Warning label
-  p(9,50,22,4,'#8a8a00');
-  for(let i=0;i<5;i++)p(10+i*4,51,2,2,'#1a1a00');
-
-  // Fluorescent (dim in basement)
-  const lc2=fv>0.6?'#888866':fv>0.25?'#403828':'#0a0810';
-  p(50,0,60,1,lc2);
-
-  // Emergency exit door
-  p(104,2,56,76,'#1a2028');
-  // Door surface
-  const doorColor=G.flags.power?'#1e2830':'#161c24';
-  p(108,4,44,68,doorColor);
-  p(110,6,40,64,'#1a2428');
-  // Door bolts
-  p(106,6,3,3,'#353840');p(148,6,3,3,'#353840');
-  p(106,70,3,3,'#353840');p(148,70,3,3,'#353840');
-  // Door reinforcement lines
-  p(108,30,44,1,'#222830');p(108,50,44,1,'#222830');
-
-  // Card terminal
-  p(145,36,12,18,'#181c20');
-  p(146,37,10,16,'#101418');
-  // Terminal screen
-  p(147,39,8,6,'#0a0c10');
-  // Terminal LED
-  const tLed=G.flags.power?'#00aa00':'#3a0000';
-  p(149,46,4,2,tLed);
-  // Card slot
-  p(148,50,6,2,'#080a0e');
-
-  // Exit sign
-  p(114,1,30,4,G.flags.power?'#0a3a0a':'#0a1a0a');
-  if(G.flags.power){
-    ctx.save();ctx.fillStyle='#00aa00';ctx.font=(2*S)+'px monospace';
-    ctx.fillText('EXIT',118*S,4*S);ctx.restore();
-  }
-
-  // Light cone (dim)
-  if(fv>0.2){
-    ctx.save();ctx.globalAlpha=fv*0.05;ctx.fillStyle='#ffffcc';
+  // Fluorescent light
+  const lc=fv>0.6?'#ffffaa':fv>0.25?'#504030':'#0a0810';
+  p(50,0,60,1,lc);
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.10;ctx.fillStyle='#ffffcc';
     ctx.beginPath();ctx.moveTo(55*S,2*S);ctx.lineTo(105*S,2*S);ctx.lineTo(130*S,72*S);ctx.lineTo(30*S,72*S);ctx.closePath();ctx.fill();
     ctx.restore();
   }
 
-  // Touch feedback
-  if(G.touchFeedback&&G.t<G.touchFeedback.until){
-    const z=G.touchFeedback.zone;
-    ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
-    ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
+  // Medicine cabinet (left)
+  p(5,12,28,46,'#252830');p(6,13,26,44,'#1e2228');
+  p(5,12,28,1,'#353840');p(5,57,28,1,'#353840');p(5,12,1,46,'#353840');p(32,12,1,46,'#353840');
+  // Cabinet shelves
+  p(7,24,24,1,'#303840');p(7,36,24,1,'#303840');p(7,48,24,1,'#303840');
+  // Bottles on shelves
+  p(10,18,4,6,'#2a5a2a');p(16,19,3,5,'#5a2a2a');p(22,17,4,7,'#2a2a5a');
+  p(10,28,5,8,'#3a4a3a');p(18,30,4,6,'#4a3a2a');
+  p(12,40,3,8,'#5a3a3a');p(20,41,4,7,'#3a5a5a');
+  // Lock
+  if(!G.flags.r3_cabinet) p(30,34,3,3,'#8a6020');
+
+  // Desk (center-right)
+  p(62,48,46,22,'#3a2818');p(64,50,42,18,'#442d1c');
+  // Desk legs
+  p(64,68,3,4,'#2a1c10');p(102,68,3,4,'#2a1c10');
+  // Desk drawers
+  p(66,52,18,7,'#3a2818');p(74,54,2,1,'#C8A820');
+  p(66,60,18,7,'#3a2818');p(74,63,2,1,'#C8A820');
+  // Items on desk
+  p(88,46,6,3,'#555');p(96,44,4,5,'#2a4a5a');
+
+  // Document on wall (right)
+  p(122,16,26,16,'#C8B87C');
+  p(124,18,22,1,'#A09060');p(124,21,20,1,'#A09060');p(124,24,18,1,'#A09060');p(124,27,22,1,'#A09060');
+  // Pin
+  p(134,15,2,2,'#aa3030');
+
+  // Sink (far right)
+  p(140,40,16,14,'#ccc');p(141,41,14,12,'#aaa');
+  p(146,38,4,3,'#888');
+  // Faucet
+  p(147,36,2,3,'#777');p(146,35,4,2,'#888');
+
+  drawTouchFeedback();
+}
+
+function drawRoom4(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#161220');
+  for(let i=0;i<160;i+=10)p(i,4,1,68,'#141020');
+  p(0,70,160,2,'#10101a');
+
+  // Fluorescent
+  const lc=fv>0.6?'#ffffaa':fv>0.25?'#504030':'#0a0810';
+  p(60,0,40,1,lc);
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.08;ctx.fillStyle='#ffffcc';
+    ctx.fillRect(30*S,2*S,100*S,70*S);ctx.restore();
   }
+
+  // Monitor desk
+  p(8,44,84,28,'#252030');p(10,46,80,24,'#1e1828');
+  // Monitors (3)
+  for(let i=0;i<3;i++){
+    const mx=12+i*26;
+    p(mx,12,22,30,'#222');p(mx+1,13,20,28,'#111');
+    // Screen content - static/CCTV
+    const sc=fv>0.3;
+    if(sc){
+      ctx.save();ctx.globalAlpha=0.4+Math.sin(t*0.003+i)*0.15;
+      p(mx+2,14,18,26,'#0a1a0a');
+      // Static lines
+      for(let j=0;j<6;j++){
+        const sy=14+Math.floor((t*0.01+j*4+i*7)%26);
+        p(mx+2,sy,18,1,'#1a3a1a');
+      }
+      ctx.restore();
+    }
+    // Monitor stand
+    p(mx+8,42,6,3,'#333');
+  }
+  // LED on monitors
+  for(let i=0;i<3;i++){
+    p(14+i*26,41,2,1,G.flags.r4_monitor?'#3a0000':'#00aa00');
+  }
+
+  // Safe (right)
+  p(112,32,34,34,'#303840');p(114,34,30,30,'#282e38');
+  // Dial
+  ctx.save();ctx.fillStyle='#555';ctx.beginPath();ctx.arc(129*S,49*S,6*S,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#333';ctx.beginPath();ctx.arc(129*S,49*S,4*S,0,Math.PI*2);ctx.fill();ctx.restore();
+  // Handle
+  p(138,46,6,2,'#666');p(138,50,6,2,'#666');
+  if(G.flags.r4_safe) p(115,35,28,28,'#1a2a1a');
+
+  // Power panel (bottom left)
+  p(6,60,38,16,'#252830');p(7,61,36,14,'#1e2228');
+  // Fuse slots
+  for(let i=0;i<3;i++){
+    p(10+i*11,63,8,10,'#0a0c10');
+    if(G.flags.r4_powered&&i===1){
+      p(11+i*11,64,6,8,'#dde8ee');p(12+i*11,66,4,4,'#C8A820');
+    } else {
+      p(13+i*11,67,2,3,'#3a0000');
+    }
+  }
+  // Warning label
+  p(8,76,20,2,'#8a8a00');
+
+  drawTouchFeedback();
+}
+
+function drawRoom5(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls - concrete
+  p(0,4,160,68,'#181620');
+  for(let i=0;i<20;i++)p(i*8+3,4+(i*7)%60,1,3,'#1a181f');
+
+  // Fluorescent
+  const lc=fv>0.6?'#aaaaaa':fv>0.25?'#404030':'#0a0810';
+  p(70,0,20,1,lc);
+
+  // Spiral staircase structure
+  // Left railing
+  p(22,10,3,58,'#353840');p(38,10,3,58,'#353840');
+  // Horizontal bars
+  for(let i=0;i<6;i++){
+    p(22,12+i*10,19,1,'#303840');
+  }
+  // Steps going down
+  for(let i=0;i<8;i++){
+    const sy=16+i*7;
+    const shade=Math.max(0,40-i*4);
+    p(24,sy,14,5,'rgb('+shade+','+shade+','+(shade+8)+')');
+  }
+  // Dark void below
+  p(24,72,14,18,'#020204');
+
+  // Cold air effect
+  ctx.save();ctx.globalAlpha=0.08+Math.sin(t*0.001)*0.03;
+  for(let i=0;i<5;i++){
+    const cx=60+Math.sin(t*0.0005+i*1.3)*30;
+    const cy=30+i*10;
+    p(cx,cy,20,1,'#8080cc');
+  }
+  ctx.restore();
+
+  // Vent grate
+  p(62,52,38,26,'#303840');p(64,54,34,22,'#282e38');
+  for(let i=0;i<5;i++)p(66+i*7,54,2,22,'#3a4048');
+  if(!G.flags.r5_grate){
+    // Bolts
+    p(63,53,2,2,'#555');p(97,53,2,2,'#555');
+    p(63,75,2,2,'#555');p(97,75,2,2,'#555');
+  } else {
+    // Open grate
+    p(64,54,34,22,'#0a0a10');
+  }
+
+  // Wall cracks
+  ctx.strokeStyle='#1e1c24';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(110*S,8*S);ctx.lineTo(112*S,30*S);ctx.lineTo(108*S,55*S);ctx.stroke();
+
+  drawTouchFeedback();
+}
+
+function drawRoom6(fv,t){
+  // DARK ROOM - dim everything
+  const dark=G.battery>0?0.3:0.08;
+
+  // Floor
+  p(0,72,160,18,'#060408');
+  // Ceiling
+  p(0,0,160,4,'#040306');
+  // Walls
+  p(0,4,160,68,'#0e0a14');
+
+  // Broken fluorescent
+  p(40,0,80,1,'#1a1a1a');
+  if(Math.random()<0.02){
+    ctx.save();ctx.globalAlpha=0.3;p(40,0,80,1,'#666644');ctx.restore();
+  }
+
+  ctx.save();ctx.globalAlpha=dark;
+
+  // Pipes on ceiling
+  p(12,4,136,4,'#252830');p(12,4,136,1,'#303840');
+  p(30,4,3,4,'#2a2e38');p(80,4,3,4,'#2a2e38');p(130,4,3,4,'#2a2e38');
+  // Dripping
+  const drip=(t*0.0012)%1;
+  if(drip<0.7){
+    p(80,8+Math.round(drip*62),1,2,'#1830a0');
+  }
+
+  // Corpse
+  if(!G.flags.r6_corpse){
+    // Body
+    p(82,52,14,8,'#2a2020');p(84,48,10,6,'#282018');
+    // Head
+    p(96,48,6,6,'#3a2a2a');
+    // Arm
+    p(80,54,4,8,'#2a2020');
+    // Crowbar next to body
+    p(100,56,16,2,'#555');p(100,55,4,3,'#666');
+  } else {
+    p(82,52,14,8,'#2a2020');p(84,48,10,6,'#282018');
+    p(96,48,6,6,'#3a2a2a');p(80,54,4,8,'#2a2020');
+  }
+
+  // Document on floor (right)
+  p(132,52,18,16,'#C8B87C');
+  ctx.save();ctx.globalAlpha=0.6;
+  p(134,54,14,1,'#A09060');p(134,57,12,1,'#A09060');p(134,60,14,1,'#A09060');
+  ctx.restore();
+
+  // Water puddles
+  ctx.save();ctx.globalAlpha=0.15;
+  p(20,74,40,6,'#1830a0');p(100,76,30,4,'#1830a0');
+  ctx.restore();
+
+  ctx.restore();
+
+  drawTouchFeedback();
+}
+
+function drawRoom7(fv,t){
+  // Floor - tile
+  p(0,72,160,18,'#0c0a10');
+  for(let i=0;i<10;i++)for(let j=0;j<2;j++){
+    p(i*16,72+j*9,15,8,(i+j)%2===0?'#121016':'#100e14');
+  }
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#1c1828');
+  // White tile walls
+  for(let i=0;i<20;i++)for(let j=0;j<4;j++){
+    p(i*8,4+j*17,7,16,'#1e1a28');
+  }
+  p(0,70,160,2,'#14101c');
+
+  // Fluorescent
+  const lc=fv>0.6?'#ddddaa':fv>0.25?'#403828':'#0a0810';
+  p(40,0,80,1,lc);
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.06;ctx.fillStyle='#ffffcc';
+    ctx.fillRect(20*S,2*S,120*S,70*S);ctx.restore();
+  }
+
+  // Chemical shelf (left)
+  p(5,10,22,48,'#2a2018');p(6,11,20,46,'#221a14');
+  // Shelves
+  p(7,22,18,1,'#352a1e');p(7,34,18,1,'#352a1e');p(7,46,18,1,'#352a1e');
+  // Bottles
+  p(9,14,4,8,'#224422');p(15,15,3,7,'#442222');p(20,13,4,9,'#222244');
+  p(9,25,5,9,'#335533');p(16,27,4,7,'#553333');
+  p(10,37,3,9,'#446644');p(17,38,4,8,'#664444');
+
+  // Lab table (center)
+  p(32,44,58,24,'#353840');p(34,46,54,20,'#2e3238');
+  // Table legs
+  p(36,66,4,6,'#282e32');p(82,66,4,6,'#282e32');
+  // Test tubes on table
+  for(let i=0;i<5;i++){
+    const tx=38+i*10;
+    p(tx,36,3,10,'#aab8c8');
+    // Liquid colors
+    const colors=['#aa2222','#22aa22','#2222aa','#aaaa22','#aa22aa'];
+    p(tx,40,3,6,colors[i]);
+  }
+  // Rack
+  p(36,35,34,2,'#555');
+
+  // Analysis machine (right)
+  p(112,12,38,48,'#252830');p(114,14,34,44,'#1e2228');
+  // Screen
+  p(118,18,24,16,'#0a1a0a');
+  if(fv>0.3){
+    ctx.save();ctx.globalAlpha=0.5;
+    // Waveform
+    ctx.strokeStyle='#00aa00';ctx.lineWidth=1;
+    ctx.beginPath();
+    for(let i=0;i<24;i++){
+      const mx=(118+i)*S;
+      const my=(26+Math.sin(t*0.003+i*0.5)*4)*S;
+      if(i===0)ctx.moveTo(mx,my);else ctx.lineTo(mx,my);
+    }
+    ctx.stroke();ctx.restore();
+  }
+  // Tape slot
+  p(120,38,18,6,'#0a0a0a');p(121,39,16,4,'#111');
+  // Buttons
+  p(118,48,6,4,'#3a0000');p(126,48,6,4,'#003a00');p(134,48,6,4,'#00003a');
+
+  drawTouchFeedback();
+}
+
+function drawRoom8(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#1a1622');
+  for(let i=0;i<160;i+=12)p(i,4,1,68,'#181420');
+  p(0,70,160,2,'#12101a');
+
+  // Fluorescent
+  const lc=fv>0.6?'#bbbb88':fv>0.25?'#403828':'#0a0810';
+  p(50,0,60,1,lc);
+  if(fv>0.15){
+    ctx.save();ctx.globalAlpha=fv*0.06;ctx.fillStyle='#ffffcc';
+    ctx.fillRect(25*S,2*S,110*S,70*S);ctx.restore();
+  }
+
+  // Filing cabinets (left)
+  for(let i=0;i<3;i++){
+    const cx=6+i*18;
+    p(cx,10,16,58,'#303840');p(cx+1,11,14,56,'#282e38');
+    // Drawers
+    for(let j=0;j<4;j++){
+      p(cx+2,13+j*14,12,12,'#252a32');
+      p(cx+6,17+j*14,4,1,'#555');
+    }
+  }
+  // Labels
+  p(8,12,12,2,'#8a8a00');p(26,12,12,2,'#8a8a00');p(44,12,12,2,'#8a8a00');
+
+  // Dust particles
+  ctx.save();ctx.globalAlpha=0.15;
+  for(let i=0;i<8;i++){
+    const dx=(20+Math.sin(t*0.0003+i*1.7)*50+i*15)%160;
+    const dy=(10+Math.cos(t*0.0004+i*2.1)*30+i*8)%70+4;
+    p(dx,dy,1,1,'#aaa');
+  }
+  ctx.restore();
+
+  // Safe (right)
+  p(102,32,38,38,'#303840');p(104,34,34,34,'#282e38');
+  // Dial
+  ctx.save();ctx.fillStyle='#555';ctx.beginPath();ctx.arc(121*S,51*S,6*S,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#333';ctx.beginPath();ctx.arc(121*S,51*S,4*S,0,Math.PI*2);ctx.fill();ctx.restore();
+  p(130,48,8,2,'#666');p(130,52,8,2,'#666');
+  if(G.flags.r8_safe2){
+    p(105,35,32,32,'#1a2a1a');
+  }
+
+  // Desk (bottom center)
+  p(72,52,28,18,'#3a2818');p(74,54,24,14,'#442d1c');
+  p(74,68,3,4,'#2a1c10');p(93,68,3,4,'#2a1c10');
+  // Papers on desk
+  p(76,50,8,6,'#C8B87C');p(86,48,6,8,'#C8B87C');
+
+  drawTouchFeedback();
+}
+
+function drawRoom9(fv,t){
+  // DARK ROOM
+  const dark=G.battery>0?0.28:0.06;
+
+  // Floor - water
+  p(0,72,160,18,'#060810');
+  // Ceiling - low
+  p(0,0,160,8,'#060408');
+  // Walls - brick
+  p(0,8,160,64,'#0e0a12');
+
+  ctx.save();ctx.globalAlpha=dark;
+
+  // Brick pattern
+  for(let j=0;j<8;j++){
+    for(let i=0;i<10;i++){
+      const bx=i*16+(j%2)*8;
+      const by=8+j*8;
+      p(bx,by,15,7,'#120e16');
+      p(bx+1,by+1,13,5,'#100c14');
+    }
+  }
+
+  // Water
+  ctx.save();ctx.globalAlpha=0.3;
+  p(0,62,160,28,'#0a1830');
+  // Ripples
+  for(let i=0;i<4;i++){
+    const rx=(40+i*30+Math.sin(t*0.001+i)*5);
+    p(rx,64+Math.sin(t*0.002+i*2)*2,20,1,'#1a2840');
+  }
+  ctx.restore();
+
+  // Valve (left)
+  p(12,22,20,20,'#353840');
+  // Wheel
+  ctx.save();ctx.fillStyle='#aa3030';ctx.beginPath();ctx.arc(22*S,32*S,7*S,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#882020';ctx.beginPath();ctx.arc(22*S,32*S,4*S,0,Math.PI*2);ctx.fill();ctx.restore();
+  // Pipe from valve
+  p(32,30,20,3,'#303840');
+
+  // Iron gate (right)
+  p(112,10,38,58,'#282e32');
+  // Bars
+  for(let i=0;i<5;i++){
+    p(116+i*7,10,3,58,'#353a40');
+  }
+  // Cross bars
+  p(112,30,38,3,'#303840');p(112,50,38,3,'#303840');
+  if(G.flags.r9_gate){
+    // Open gate
+    ctx.save();ctx.globalAlpha=0.6;p(114,12,34,54,'#060810');ctx.restore();
+  }
+
+  ctx.restore();
+
+  drawTouchFeedback();
+}
+
+function drawRoom10(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#1a1418');
+  p(0,70,160,2,'#141014');
+
+  // Fluorescent
+  const lc=fv>0.6?'#aa8844':fv>0.25?'#503820':'#0a0810';
+  p(70,0,20,1,lc);
+
+  // Large boiler
+  p(12,10,58,58,'#303840');p(14,12,54,54,'#282e38');
+  // Boiler body
+  ctx.save();ctx.fillStyle='#353a42';
+  ctx.beginPath();ctx.arc(41*S,39*S,26*S,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#2e3238';
+  ctx.beginPath();ctx.arc(41*S,39*S,22*S,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // Fire glow
+  ctx.save();
+  const fireAlpha=0.15+Math.sin(t*0.005)*0.08;
+  ctx.globalAlpha=fireAlpha;
+  p(24,55,34,10,'#aa4400');
+  ctx.globalAlpha=fireAlpha*0.6;
+  p(28,50,26,8,'#cc6600');
+  ctx.restore();
+  // Gauge
+  p(48,20,8,8,'#222');
+  ctx.save();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(52*S,24*S,3*S,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#aa2222';ctx.fillRect(52*S,22*S,1,4*S);ctx.restore();
+  // Pipes from boiler
+  p(68,20,10,3,'#303840');p(68,40,10,3,'#303840');
+  p(68,56,10,3,'#303840');
+
+  // Steam effect
+  if(!G.flags.r10_steam){
+    ctx.save();ctx.globalAlpha=0.12+Math.sin(t*0.002)*0.05;
+    for(let i=0;i<6;i++){
+      const sx=75+Math.sin(t*0.001+i*1.2)*8;
+      const sy=15+i*8+Math.cos(t*0.0015+i)*3;
+      p(sx,sy,8,3,'#aaaaaa');
+    }
+    ctx.restore();
+  }
+
+  // Control panel (right)
+  p(92,22,28,28,'#252830');p(94,24,24,24,'#1e2228');
+  // Card slot
+  p(100,30,12,4,'#0a0a0a');p(101,31,10,2,'#111');
+  // LED
+  const panelLed=G.flags.r10_steam?'#00aa00':'#3a0000';
+  p(104,38,4,2,panelLed);
+  // Buttons
+  p(96,42,6,3,'#333');p(106,42,6,3,'#333');
+
+  // Shelf (far right)
+  p(132,42,22,28,'#3a2818');p(133,43,20,26,'#442d1c');
+  p(134,52,18,1,'#352a1e');
+  // Items on shelf
+  if(!G.flags.r11_badge) p(138,44,8,8,'#8a7020');
+  p(136,54,6,8,'#333');p(144,55,4,7,'#444');
+
+  drawTouchFeedback();
+}
+
+function drawRoom11(fv,t){
+  // Floor
+  p(0,72,160,18,'#0c0a10');
+  // Ceiling
+  p(0,0,160,4,'#0a0810');
+  // Walls
+  p(0,4,160,68,'#161218');
+  p(0,70,160,2,'#121014');
+
+  // Heavy iron door (center)
+  p(42,4,76,72,'#282e32');p(44,6,72,68,'#222830');
+  // Door surface
+  const doorColor=G.flags.r11_door?'#1e3028':'#1e2228';
+  p(48,8,64,64,doorColor);
+  // Reinforcement
+  p(48,36,64,2,'#303840');p(48,56,64,2,'#303840');
+  p(80,8,2,64,'#303840');
+  // Bolts
+  p(50,10,4,4,'#444');p(106,10,4,4,'#444');
+  p(50,66,4,4,'#444');p(106,66,4,4,'#444');
+  p(50,38,4,4,'#444');p(106,38,4,4,'#444');
+  // Handle
+  p(98,32,8,3,'#555');p(98,36,8,3,'#555');
+
+  // EXIT sign
+  const exitOn=G.flags.r11_door;
+  p(62,0,36,4,exitOn?'#0a4a0a':'#0a1a0a');
+  if(exitOn){
+    ctx.save();ctx.fillStyle='#00cc00';ctx.font=(2.5*S)+'px monospace';
+    ctx.fillText('EXIT',68*S,3.5*S);ctx.restore();
+  }
+
+  // Security terminal (right)
+  p(132,32,18,22,'#252830');p(133,33,16,20,'#1e2228');
+  // Screen
+  p(135,35,12,8,'#0a0c10');
+  if(G.flags.r11_door){
+    ctx.save();ctx.fillStyle='#00aa00';ctx.font=(1.5*S)+'px monospace';
+    ctx.fillText('OK',138*S,41*S);ctx.restore();
+  }
+  // Card/badge slot
+  p(137,46,8,4,'#0a0a0a');
+  // LED
+  const tLed=G.flags.r11_door?'#00aa00':'#3a0000';
+  p(139,52,4,2,tLed);
+
+  // Wall pipes
+  p(4,10,8,3,'#303840');p(4,30,8,3,'#303840');
+  p(8,10,3,23,'#303840');
+
+  // Warning stripes near door
+  for(let i=0;i<8;i++){
+    p(42+i*10,74,4,2,(i%2===0)?'#8a8a00':'#1a1a00');
+  }
+
+  drawTouchFeedback();
 }
 
 // ===== MAIN LOOP =====
 let lastT=0;
+let batteryTimer=0;
 function loop(timestamp){
   const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
   updateFlicker();
+
+  // Battery drain in dark rooms
+  if(DARK_ROOMS.includes(G.room)){
+    batteryTimer+=dt;
+    if(batteryTimer>=2000){
+      batteryTimer-=2000;
+      changeBattery(-3);
+    }
+  }
+
   ctx.clearRect(0,0,640,360);
+
   if(G.room==='r1')drawRoom1(flickerVal);
   else if(G.room==='r2')drawRoom2(flickerVal,G.t);
   else if(G.room==='r3')drawRoom3(flickerVal,G.t);
+  else if(G.room==='r4')drawRoom4(flickerVal,G.t);
+  else if(G.room==='r5')drawRoom5(flickerVal,G.t);
+  else if(G.room==='r6')drawRoom6(flickerVal,G.t);
+  else if(G.room==='r7')drawRoom7(flickerVal,G.t);
+  else if(G.room==='r8')drawRoom8(flickerVal,G.t);
+  else if(G.room==='r9')drawRoom9(flickerVal,G.t);
+  else if(G.room==='r10')drawRoom10(flickerVal,G.t);
+  else if(G.room==='r11')drawRoom11(flickerVal,G.t);
+
   requestAnimationFrame(loop);
 }
 
 // ===== AMBIENT SCARE =====
 function setupAmbientScare(){
   setInterval(()=>{
+    if(G.modalOpen)return;
     if(Math.random()<0.65){
-      const scares=[
-        '복도 어딘가에서 날카로운 비명소리가 들렸다...',
-        '조명이 완전히 꺼졌다가 다시 켜진다.',
-        '문손잡이가 덜컹거린다. 안에서 열려는 것 같다.',
-        '벽 너머에서 누군가 긁는 소리가 들린다.',
-        '낮고 음산한 웃음소리가 들린다...',
-        '바닥이 삐걱거린다. 무언가가 다가오는 소리다.'
-      ];
-      flash();
+      let scares;
+      if(G.act===1){
+        scares=[
+          '복도 어딘가에서 날카로운 비명소리가 들렸다...',
+          '조명이 완전히 꺼졌다가 다시 켜진다.',
+          '문손잡이가 덜컹거린다. 안에서 열려는 것 같다.',
+          '벽 너머에서 누군가 긁는 소리가 들린다.',
+          '낮고 음산한 웃음소리가 들린다...',
+          '바닥이 삐걱거린다. 무언가가 다가오는 소리다.'
+        ];
+      } else if(G.act===2){
+        scares=[
+          '지하에서 울려퍼지는 신음 소리...',
+          '파이프 속에서 뭔가가 기어가는 소리가 난다.',
+          '갑자기 차가운 바람이 뒷목을 스친다.',
+          '벽에서 검은 액체가 흘러내린다...',
+          '실험실 방향에서 유리 깨지는 소리가 들린다.',
+          '누군가의 발소리가 점점 가까워진다...'
+        ];
+      } else {
+        scares=[
+          '보일러가 갑자기 굉음을 낸다!',
+          '하수도 물 속에서 뭔가가 꿈틀거린다...',
+          '철문이 저절로 덜컹거린다.',
+          '어둠 속에서 두 개의 눈이 빛난다...',
+          '등 뒤에서 숨소리가 느껴진다.',
+          '비명소리가 벽을 타고 울려퍼진다...'
+        ];
+      }
+      flash();sfxScare();changeSanity(-2);
       setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)]),110);
     }
   },22000);
+}
+
+// Water drip sound loop
+function setupDripLoop() {
+  setInterval(() => {
+    if ((G.room === 'r6' || G.room === 'r9') && audioCtx) sfxDrip();
+  }, 2800);
 }
 
 // ===== INIT =====
@@ -781,8 +1944,10 @@ function init(){
   setupNumpad();
   setupCodePadEvents();
   setupAmbientScare();
+  setupDripLoop();
   resizeGame();
   goRoom('r1');
+  showActTitle(1);
   requestAnimationFrame(loop);
 }
 init();
