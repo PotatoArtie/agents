@@ -130,6 +130,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
         <button class="dial-btn" id="dial-ok">OK</button>
       </div>
       <div style="text-align:center;color:#555;font-size:7px;font-family:inherit" id="dial-step">1 / 3</div>
+      <div style="margin-top:8px"><button class="doc-close" id="dial-cancel">취소</button></div>
     </div>
     <div class="act-overlay" id="act-overlay">
       <div class="act-title" id="act-title"></div>
@@ -384,18 +385,18 @@ document.addEventListener('touchstart', initAudioOnInteraction);
 const G = {
   room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
   displayScale:1.0, touchFeedback:null, act:1,
-  sanity:100, battery:100, docsRead:[], modalOpen:null,
+  sanity:100, battery:100, docsRead:[], modalOpen:null, ended:false,
   dialVal:0, dialSeq:[], dialTarget:[],
   flags:{bed:false,wall:false,lock:false,nurse:false,
     r3_desk:false,r3_cabinet:false,r3_doc1:false,
     r4_monitor:false,r4_safe:false,r4_powered:false,
-    r5_grate:false,r5_valve:false,
+    r5_grate:false,
     r6_doc2:false,r6_corpse:false,
     r7_table:false,r7_formula:false,r7_mix:false,
     r8_shelf:false,r8_safe2:false,
     r9_gate:false,
     r10_boiler:false,r10_steam:false,
-    r11_door:false,r11_badge:false}
+    r11_door:false,badge_taken:false}
 };
 
 const ITEMS = {
@@ -532,7 +533,7 @@ function changeSanity(amt){
   bar.style.width=G.sanity+'%';
   if(G.sanity<=20) bar.style.background='#aa3333';
   else bar.style.background='#3366aa';
-  if(G.sanity<=0) gameOverSanity();
+  if(G.sanity<=0&&!G.ended) gameOverSanity();
 }
 
 function changeBattery(amt){
@@ -544,6 +545,7 @@ function changeBattery(amt){
 }
 
 function gameOverSanity(){
+  G.ended=true;
   const ws=document.getElementById('win-screen');
   document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
   document.getElementById('win-title').style.color='#aa2222';
@@ -680,7 +682,7 @@ function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
 function openDoc(id){
   if(!DOCS[id])return;
   G.modalOpen='doc';
-  if(!G.docsRead.includes(id))G.docsRead.push(id);
+  if(!G.docsRead.includes(id)){G.docsRead.push(id);changeSanity(5)}
   document.getElementById('doc-title').textContent=DOCS[id].title;
   document.getElementById('doc-body').textContent=DOCS[id].body;
   document.getElementById('doc-modal').classList.add('open');
@@ -743,6 +745,7 @@ document.getElementById('dial-ok').addEventListener('click',()=>{
     sfxClick();
   }
 });
+document.getElementById('dial-cancel').addEventListener('click',()=>{closeDial();setMsg(ROOM_MSGS[G.room])});
 
 // ===== ACT TRANSITIONS =====
 function showActTitle(act){
@@ -760,6 +763,7 @@ function showActTitle(act){
 
 // ===== ENDING SYSTEM =====
 function showEnding(){
+  G.ended=true;
   const ws=document.getElementById('win-screen');
   if(G.sanity<=0){
     document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
@@ -833,8 +837,8 @@ function handleClick(id){
     if(id==='r4_monitor'){
       if(!G.flags.r4_monitor){
         G.flags.r4_monitor=true;flash();sfxScare();changeSanity(-8);
-        setMsg('모니터에 병실들이 비친다... 한 화면에서 무언가가 카메라를 쳐다보고 있다!');
-      } else setMsg('모니터들이 깜빡인다. 더 이상 보고 싶지 않다.');
+        setMsg('모니터에 병실들이 비친다... 한 화면에서 무언가가 카메라를 쳐다보고 있다! ...모니터 옆에 포스트잇이 붙어있다: "15-42-8"');
+      } else setMsg('모니터들이 깜빡인다. 포스트잇에 "15-42-8"이 적혀있다.');
     } else if(id==='r4_safe'){
       if(!G.flags.r4_safe){
         openDial([15,42,8]);
@@ -895,10 +899,12 @@ function handleClick(id){
       else setMsg('더 이상 찾을 것이 없는 서류 더미다.');
     } else if(id==='r8_safe'){
       if(!G.flags.r8_safe2){
-        if(G.sel==='chemical'){G.flags.r8_safe2=true;removeItem('chemical');flash('#004400');sfxPower();G.sel=null;openDoc('doc6');setMsg('화학약품으로 금고 잠금장치를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
+        if(G.sel==='chemical'&&G.inv.includes('formula')){G.flags.r8_safe2=true;removeItem('chemical');removeItem('formula');flash('#004400');sfxPower();G.sel=null;openDoc('doc6');setMsg('조합 공식대로 화학약품을 조합해 금고를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
+        else if(G.sel==='chemical'&&!G.inv.includes('formula')){setMsg('화학약품만으로는 안 된다. 올바른 조합 공식이 필요하다.')}
         else{
-          if(G.inv.includes('chemical')) setMsg('금고가 단단히 잠겨있다. 화학약품으로 부식시킬 수 있을 것 같다.');
-          else setMsg('금고가 단단히 잠겨있다. 강한 부식제가 필요하다.');
+          if(G.inv.includes('chemical')&&G.inv.includes('formula')) setMsg('금고가 잠겨있다. 화학약품을 선택해서 조합 공식대로 부식시키자.');
+          else if(G.inv.includes('chemical')) setMsg('금고가 잠겨있다. 화학약품은 있지만 올바른 조합 공식이 필요하다.');
+          else setMsg('금고가 단단히 잠겨있다. 강한 부식제와 조합 공식이 필요하다.');
         }
       } else setMsg('이미 열린 금고다.');
     } else if(id==='r8_desk'){
@@ -908,12 +914,13 @@ function handleClick(id){
     }
   } else if(G.room==='r9'){
     if(id==='r9_valve'){
+      if(!G.inv.includes('mask')){changeSanity(-10);flash();sfxScare();setMsg('유독가스가 뿜어져 나온다! 가스마스크 없이는 밸브를 돌릴 수 없다!');return}
       valveClicks++;
       if(valveClicks>=2&&!G.flags.r9_gate){
         G.flags.r9_gate=true;flash('#004400');sfxPower();
-        setMsg('밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
+        setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
       } else if(!G.flags.r9_gate){
-        sfxClick();setMsg('밸브가 뻑뻑하다. 한 번 더 돌려야 할 것 같다. ('+valveClicks+'/2)');
+        sfxClick();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 한 번 더 돌려야 할 것 같다. ('+valveClicks+'/2)');
       } else setMsg('밸브는 이미 완전히 열려있다.');
     } else if(id==='r9_gate'){
       if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
@@ -935,7 +942,7 @@ function handleClick(id){
         }
       } else setMsg('증기가 차단된 상태다.');
     } else if(id==='r10_shelf'){
-      if(!G.flags.r11_badge){G.flags.r11_badge=true;addItem('badge');flash();sfxPickup();setMsg('선반에서 원장 뱃지를 발견했다! [원장 뱃지 획득]')}
+      if(!G.flags.badge_taken){G.flags.badge_taken=true;addItem('badge');flash();sfxPickup();setMsg('선반에서 원장 뱃지를 발견했다! [원장 뱃지 획득]')}
       else setMsg('선반에는 더 이상 아무것도 없다.');
     }
   } else if(G.room==='r11'){
@@ -1012,7 +1019,7 @@ function goRoom(id){
     showActTitle(newAct);
   }
   G.room=id;G.pad=false;G.sel=null;
-  closeCodePad();sfxDoor();
+  closeCodePad();closeDoc();closeDial();sfxDoor();
   document.getElementById('room-label').textContent=ROOM_LABELS[id];
   document.getElementById('room-num').textContent=ROOM_NUMS[id];
   setMsg(ROOM_MSGS[id]);
@@ -1028,11 +1035,11 @@ function setupNav(){
     const locked=n.req&&!n.req();
     if(locked){
       b.classList.add('locked');
-      b.addEventListener('click',()=>{sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
-      b.addEventListener('touchend',e=>{e.preventDefault();sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
+      b.addEventListener('click',()=>{if(G.modalOpen)return;sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
+      b.addEventListener('touchend',e=>{e.preventDefault();if(G.modalOpen)return;sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
     } else {
-      b.addEventListener('click',()=>goRoom(n.to));
-      b.addEventListener('touchend',e=>{e.preventDefault();goRoom(n.to)});
+      b.addEventListener('click',()=>{if(G.modalOpen)return;goRoom(n.to)});
+      b.addEventListener('touchend',e=>{e.preventDefault();if(G.modalOpen)return;goRoom(n.to)});
     }
     el.appendChild(b);
   });
@@ -1795,7 +1802,7 @@ function drawRoom10(fv,t){
   p(132,42,22,28,'#3a2818');p(133,43,20,26,'#442d1c');
   p(134,52,18,1,'#352a1e');
   // Items on shelf
-  if(!G.flags.r11_badge) p(138,44,8,8,'#8a7020');
+  if(!G.flags.badge_taken) p(138,44,8,8,'#8a7020');
   p(136,54,6,8,'#333');p(144,55,4,7,'#444');
 
   drawTouchFeedback();
@@ -1863,6 +1870,7 @@ function drawRoom11(fv,t){
 let lastT=0;
 let batteryTimer=0;
 function loop(timestamp){
+  if(G.ended)return;
   const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
   updateFlicker();
 
