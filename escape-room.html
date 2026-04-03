@@ -227,12 +227,20 @@ function updateInv(){
       const tip=document.createElement('span');
       tip.className='inv-tip';tip.textContent=ITEMS[id].name;
       slot.appendChild(tip);
-      slot.addEventListener('click',()=>{
-        if(G.sel===id){G.sel=null;setMsg(ITEMS[id].desc);if(id==='note')setMsg("피 묻은 메모: '내 번호를 기억해. 4 - 7 - 2 - 9'")}
-        else{G.sel=id;setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.');if(id==='note')setMsg("피 묻은 메모 선택됨 — '4 - 7 - 2 - 9' — 사용할 물체를 클릭하세요.")}
+      function onSlotClick(){
+        if(G.sel===id){
+          G.sel=null;
+          if(id==='note') setMsg("[ 피 묻은 메모 ]\n'내 번호를 기억해. 4 - 7 - 2 - 9'");
+          else setMsg(ITEMS[id].desc);
+        } else {
+          G.sel=id;
+          if(id==='note') setMsg("피 묻은 메모 선택됨 — 코드: 4 - 7 - 2 - 9 — 사용할 물체를 클릭하세요.");
+          else setMsg(ITEMS[id].name+' 선택됨 — 사용할 물체를 클릭하세요.');
+        }
         updateInv();
-      });
-      slot.addEventListener('touchend',e=>{e.preventDefault()});
+      }
+      slot.addEventListener('click',onSlotClick);
+      slot.addEventListener('touchend',e=>{e.preventDefault();onSlotClick()});
     }
     el.appendChild(slot);
   }
@@ -268,7 +276,10 @@ function handleClick(id){
     if(id==='locker'){
       if(!G.flags.lock){
         if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
-        else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
+        else{
+          if(G.inv.includes('key')) setMsg('낡은 자물쇠가 달려있다. 인벤토리에서 열쇠를 선택한 후 이곳을 다시 클릭하세요.');
+          else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
+        }
       } else setMsg('이미 열린 사물함이다. 텅 비어있다.');
     } else if(id==='nurse'){
       if(G.flags.nurse){setMsg('이미 열린 캐비닛이다.');return}
@@ -283,7 +294,10 @@ function handleClick(id){
     if(id==='fbox'){
       if(G.flags.fuse){setMsg('퓨즈가 이미 설치되어 있다. 전력이 흐르고 있다.');return}
       if(G.sel==='fuse'){G.flags.fuse=true;G.flags.power=true;removeItem('fuse');flash('#004400');G.sel=null;setMsg('퓨즈를 설치했다! 비상구 전자 잠금장치에 전력이 공급되었다!')}
-      else setMsg('퓨즈박스. 퓨즈가 빠져있어 전력이 차단된 상태다. 맞는 퓨즈가 필요하다.');
+      else{
+        if(G.inv.includes('fuse')) setMsg('퓨즈박스. 퓨즈가 빠져있다. 인벤토리에서 퓨즈를 선택한 후 이곳을 다시 클릭하세요.');
+        else setMsg('퓨즈박스. 퓨즈가 빠져있어 전력이 차단된 상태다. 맞는 퓨즈를 찾아야 한다.');
+      }
     } else if(id==='exit'){
       if(!G.flags.power){setMsg('전자 잠금장치가 작동하지 않는다. 먼저 전력을 복구해야 한다.');return}
       if(G.sel==='card'){
