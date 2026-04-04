@@ -93,6 +93,11 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .inv-slot canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 .inv-slot .inv-tip{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:7px;padding:3px 6px;white-space:nowrap;display:none;z-index:60;pointer-events:none}
 .inv-slot:hover .inv-tip{display:block}
+.hint-btn{background:#0a0a0a;border:1px solid #2a1a1a;color:#5a3a3a;font-family:inherit;font-size:clamp(10px,3vw,14px);width:36px;height:36px;border-radius:50%;cursor:pointer;flex-shrink:0;transition:background 0.2s,color 0.2s;display:flex;align-items:center;justify-content:center}
+.hint-btn:hover{background:#1a0a0a;color:#8a5a5a}
+.hint-btn:active{background:#2a1010}
+.hint-btn.pulse{animation:hintPulse 2s infinite}
+@keyframes hintPulse{0%,100%{border-color:#2a1a1a}50%{border-color:#5a3a3a}}
 .inv-sel-name{color:#7b4040;font-size:clamp(6px,1.6vw,8px);font-family:inherit;flex-shrink:0;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .landscape-mode .message-box{min-height:0;padding:6px 12px}
 .landscape-mode .title-bar{padding:4px 10px}
@@ -174,6 +179,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <span class="inv-label">아이템</span>
     <div class="inv-slots" id="inv-slots"></div>
     <span class="inv-sel-name" id="inv-sel-name"></span>
+    <button class="hint-btn" id="hint-btn">?</button>
   </div>
 </div>
 <script>
@@ -857,6 +863,7 @@ function restartGame(){
   valveClicks=0;batteryTimer=0;
   msgHistory.length=0;msgIdx=-1;
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
+  hintCount=0;firstItemShown=false;lastAction=0;
   document.getElementById('san-bar').style.width='100%';
   document.getElementById('san-bar').style.background='#3366aa';
   document.getElementById('san-num').textContent='100';
@@ -868,6 +875,107 @@ function restartGame(){
   requestAnimationFrame(loop);
 }
 document.getElementById('btn-restart').addEventListener('click',restartGame);
+
+// ===== HINT SYSTEM =====
+function getHint(){
+  const f=G.flags, inv=G.inv;
+  // Act 1
+  if(G.room==='r1'){
+    if(!f.bed) return '침대를 조사해보세요. 매트리스 아래에 뭔가 있을 수 있습니다.';
+    if(!f.wall) return '벽의 핏자국을 조사해보세요. 뒤에 뭔가 숨겨져 있습니다.';
+    return '복도로 이동하세요. → 버튼을 누르세요.';
+  }
+  if(G.room==='r2'){
+    if(!f.lock&&inv.includes('key')) return '녹슨 열쇠를 선택한 후, 왼쪽의 사물함을 클릭하세요.';
+    if(!f.lock) return '사물함을 열 열쇠가 필요합니다. 병실을 다시 확인해보세요.';
+    if(!f.nurse&&inv.includes('note')) return '간호사실 캐비닛을 클릭하고 메모의 번호(4-7-2-9)를 입력하세요.';
+    if(!f.nurse) return '캐비닛 비밀번호가 필요합니다. 병실의 핏자국을 확인해보세요.';
+    return '의무실이나 감시실로 이동하세요.';
+  }
+  if(G.room==='r3'){
+    if(!f.r3_desk) return '책상 서랍을 조사해보세요.';
+    if(!f.r3_cabinet&&inv.includes('scalpel')) return '메스를 선택한 후, 약품 캐비닛을 클릭하세요.';
+    if(!f.r3_cabinet) return '캐비닛이 잠겨있습니다. 날카로운 도구가 필요합니다.';
+    return '복도로 돌아가 감시실로 이동하세요.';
+  }
+  if(G.room==='r4'){
+    if(!f.r4_monitor) return '감시 모니터를 조사해보세요. 중요한 단서가 있을 수 있습니다.';
+    if(!f.r4_safe) return '금고를 클릭하고 모니터의 포스트잇 번호(15-42-8)를 입력하세요.';
+    if(!f.r4_powered&&inv.includes('fuse')) return '퓨즈를 선택한 후 전력 패널에 설치하세요.';
+    if(!f.r4_powered) return '전력 패널에 퓨즈가 필요합니다. 복도의 캐비닛을 확인하세요.';
+    return '계단실로 내려가세요. 지하로 향합니다.';
+  }
+  // Act 2
+  if(G.room==='r5'){
+    if(!f.r5_battery) return '선반을 조사해보세요. 유용한 물건이 있을 수 있습니다.';
+    if(!f.r5_grate&&inv.includes('crowbar')) return '쇠지렛대를 선택한 후 환기구를 뜯어내세요.';
+    if(!f.r5_grate) return '환기구를 열 도구가 필요합니다. 지하복도를 먼저 탐색하세요.';
+    return '지하복도로 내려가세요.';
+  }
+  if(G.room==='r6'){
+    if(!f.r6_corpse) return '어둠 속의 무언가를 조사해보세요. (주의: 충격적일 수 있습니다)';
+    return '실험실이나 기록보관소로 이동하세요.';
+  }
+  if(G.room==='r7'){
+    if(!f.r7_formula) return '약품 선반을 조사해보세요.';
+    if(inv.includes('tape')) return '녹음테이프를 선택한 후 분석 장치에 넣어보세요.';
+    return '지하복도로 돌아가 기록보관소로 이동하세요.';
+  }
+  if(G.room==='r8'){
+    if(!f.r8_shelf) return '서류 캐비닛을 조사해보세요.';
+    if(!f.r8_safe2&&inv.includes('chemical')&&inv.includes('formula')) return '화학약품을 선택한 후 금고에 사용하세요. (조합 공식도 필요)';
+    if(!f.r8_safe2) return '금고를 열려면 화학약품과 조합 공식이 모두 필요합니다.';
+    return '하수도로 내려가세요.';
+  }
+  // Act 3
+  if(G.room==='r9'){
+    if(!f.r9_gate&&!inv.includes('mask')) return '유독가스 때문에 밸브를 돌릴 수 없습니다. 가스마스크가 필요합니다. (r5 환기구)';
+    if(!f.r9_gate) return '밸브를 여러 번 클릭해서 수문을 여세요. (가스마스크 필요)';
+    return '보일러실로 이동하세요.';
+  }
+  if(G.room==='r10'){
+    if(!f.badge_taken) return '선반을 조사해보세요. 중요한 물건이 있습니다.';
+    if(!f.r10_steam&&inv.includes('card')) return '키카드를 선택한 후 제어 패널에 사용하세요.';
+    if(!f.r10_steam) return '제어 패널에 키카드가 필요합니다.';
+    return '비상출구로 이동하세요!';
+  }
+  if(G.room==='r11'){
+    if(!f.r11_door&&inv.includes('badge')) return '원장 뱃지를 선택한 후 보안 단말기에 인증하세요.';
+    if(!f.r11_door) return '보안 단말기에 원장 뱃지가 필요합니다.';
+    if(f.r11_door) return '비상문을 클릭하세요! 탈출할 수 있습니다!';
+  }
+  return '주변을 꼼꼼히 조사해보세요.';
+}
+
+let hintCount=0;
+document.getElementById('hint-btn').addEventListener('click',()=>{
+  hintCount++;
+  sfxClick();
+  setMsg('💡 힌트: '+getHint(),'hint');
+});
+
+// ===== FIRST ITEM GUIDE =====
+let firstItemShown=false;
+const origAddItem=addItem;
+addItem=function(id){
+  origAddItem(id);
+  if(!firstItemShown&&G.inv.length===1){
+    firstItemShown=true;
+    setTimeout(()=>{
+      if(G._lastMsgType==='item')
+        setMsg(document.getElementById('msg').textContent+' — 💡 아이템을 탭해 선택 → 사용할 물체를 클릭!','item');
+    },100);
+  }
+};
+
+// ===== ROOM ENTRY GUIDE =====
+const origGoRoom=goRoom;
+goRoom=function(id){
+  origGoRoom(id);
+  const zoneCount=(zones[id]||[]).length;
+  const label=document.getElementById('room-label');
+  if(zoneCount>0) label.textContent=ROOM_LABELS[id]+' ('+zoneCount+'개 조사 가능)';
+};
 
 // ===== HANDLE CLICK =====
 function handleClick(id){
@@ -1985,6 +2093,12 @@ function drawRoom11(fv,t){
   drawTouchFeedback();
 }
 
+// ===== IDLE HINT PULSE =====
+let lastAction=0;
+function resetIdle(){lastAction=G.t;document.getElementById('hint-btn').classList.remove('pulse')}
+canvas.addEventListener('click',resetIdle);
+canvas.addEventListener('touchstart',resetIdle);
+
 // ===== MAIN LOOP =====
 let lastT=0;
 let batteryTimer=0;
@@ -1992,6 +2106,9 @@ function loop(timestamp){
   if(G.ended)return;
   const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
   updateFlicker();
+
+  // Pulse hint button after 30s idle
+  if(G.t-lastAction>30000) document.getElementById('hint-btn').classList.add('pulse');
 
   // Battery drain in dark rooms
   if(DARK_ROOMS.includes(G.room)){
