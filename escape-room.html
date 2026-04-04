@@ -201,31 +201,9 @@ function ensureAudio() {
   }
 }
 
-// iOS Safari unlock: must play actual audio synchronously in user gesture
-let audioUnlocked = false;
+// Audio unlock — create context + resume in user gesture (required by all mobile browsers)
 function unlockAudio() {
-  if (audioUnlocked && audioCtx && audioCtx.state === 'running') return;
-  // Create context in gesture handler
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  // Resume must happen in gesture
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(()=>{});
-  }
-  // Play a real (but near-inaudible) tone — iOS requires actual output
-  try {
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.connect(g);
-    g.connect(audioCtx.destination);
-    o.type = 'sine';
-    o.frequency.value = 1;
-    g.gain.value = 0.001; // near-silent but not zero
-    o.start();
-    o.stop(audioCtx.currentTime + 0.05);
-    audioUnlocked = true;
-  } catch(e){}
+  ensureAudio();
 }
 
 function sfxPickup() {
@@ -668,13 +646,11 @@ function startBGM(act) {
   if (!audioCtx) return;
   act = act || 1;
   if (currentBgmAct === act && bgmNodes.length > 0) return;
-  // Stop old BGM immediately (no setTimeout — preserves mobile gesture context)
   stopBGM();
   currentBgmAct = act;
   bgmStarted = true;
   bgmMaster = audioCtx.createGain();
-  bgmMaster.gain.setValueAtTime(0, audioCtx.currentTime);
-  bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
+  bgmMaster.gain.value = 0.035;
   bgmMaster.connect(audioCtx.destination);
   bgmNodes.push(bgmMaster);
   buildBGMForAct(act);
@@ -765,8 +741,7 @@ function updateRoomAmbience(room) {
   if (!['r4','r5','r6','r7','r9','r10','r11'].includes(room)) return;
 
   const ambMaster = audioCtx.createGain();
-  ambMaster.gain.setValueAtTime(0, audioCtx.currentTime);
-  ambMaster.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 2);
+  ambMaster.gain.value = 0.025;
   ambMaster.connect(audioCtx.destination);
   ambNodes.push(ambMaster);
 
@@ -867,19 +842,17 @@ function updateRoomAmbience(room) {
   // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
-// Audio init: runs on ANY first user interaction (even through tutorial overlay)
+// Audio init: capture phase ensures it fires even when tutorial overlay is active
 function initAudioOnInteraction() {
-  unlockAudio();
+  ensureAudio();
   startBGM(G.act || 1);
-  removeAudioListeners();
+  document.removeEventListener('click', initAudioOnInteraction, true);
+  document.removeEventListener('touchstart', initAudioOnInteraction, true);
+  document.removeEventListener('touchend', initAudioOnInteraction, true);
 }
-function removeAudioListeners() {
-  ['click','touchstart','touchend'].forEach(e =>
-    document.removeEventListener(e, initAudioOnInteraction, true));
-}
-// Use CAPTURE phase so it fires before tutorial's preventDefault
-['click','touchstart','touchend'].forEach(e =>
-  document.addEventListener(e, initAudioOnInteraction, true));
+document.addEventListener('click', initAudioOnInteraction, true);
+document.addEventListener('touchstart', initAudioOnInteraction, true);
+document.addEventListener('touchend', initAudioOnInteraction, true);
 
 // ===== GAME STATE =====
 const G = {
@@ -2675,7 +2648,7 @@ function showTutorial(){
   const el=document.getElementById('tutorial');
   function advance(e){
     e.preventDefault();
-    unlockAudio(); // iOS Safari: unlock on first user gesture
+    ensureAudio();
     tutStep++;
     if(tutStep>=TUT_STEPS.length){
       el.classList.remove('open');
@@ -2697,8 +2670,8 @@ function renderTutStep(){
 
 // ===== INIT =====
 function startGame(){
-  unlockAudio();
-  removeAudioListeners(); // tutorial handled audio init, remove redundant listeners
+  ensureAudio();
+  startBGM(1);
   setupAmbientScare();
   setupDripLoop();
   goRoom('r1');
