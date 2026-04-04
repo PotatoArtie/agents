@@ -1507,6 +1507,7 @@ function closeAct(){
   if(actTimer)clearTimeout(actTimer);actTimer=null;
   document.getElementById('act-overlay').classList.remove('open');
   document.getElementById('nav-area').style.display='flex';
+  if(!G.startTime) G.startTime=Date.now();
   G.modalOpen=null;
 }
 function showActTitle(act){
@@ -3047,7 +3048,6 @@ function startGame(){
   // Do NOT call ensureAudio/startBGM here — startGame may be called
   // during page load (tutorial skip) without user gesture.
   // Audio init happens in initAudioOnInteraction (capture phase listener).
-  G.startTime=Date.now();
   setupAmbientScare();
   setupDripLoop();
   goRoom('r1');
