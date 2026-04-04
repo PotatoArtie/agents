@@ -33,7 +33,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .nav-btn:active{background:rgba(60,0,0,0.95)}
 .nav-btn.locked{opacity:0.35;color:#333}
 .hover-tip{position:absolute;background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:8px;padding:4px 8px;pointer-events:none;z-index:26;display:none;white-space:nowrap}
-.code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:12px;z-index:40;width:min(200px,75vw);border-radius:4px;max-height:90%;overflow-y:auto}
+.code-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:12px;z-index:9999;width:min(200px,75vw);border-radius:4px;max-height:90%;overflow-y:auto}
 .code-modal.open{display:block}
 .code-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:6px}
 .num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(12px,3.5vw,14px);padding:clamp(6px,2vw,10px);cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
@@ -50,12 +50,12 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .code-led{height:3px;margin-bottom:8px;background:#1a0000;transition:background 0.3s}
 .code-led.correct{background:#004400}
 .code-led.wrong{background:#880000}
-.doc-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0c0a0a;border:1px solid #3a2020;padding:16px;z-index:40;width:min(280px,85vw);border-radius:4px;max-height:80%;overflow-y:auto}
+.doc-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0c0a0a;border:1px solid #3a2020;padding:16px;z-index:9999;width:min(280px,85vw);border-radius:4px;max-height:80%;overflow-y:auto}
 .doc-modal.open{display:block}
 .doc-title{color:#bb8855;font-size:clamp(9px,2.5vw,11px);text-align:center;margin-bottom:12px;font-family:inherit;border-bottom:1px solid #2a1a1a;padding-bottom:8px}
 .doc-body{color:#a09898;font-size:clamp(9px,2.5vw,11px);line-height:2;font-family:inherit;margin-bottom:12px;white-space:pre-line}
 .doc-close{display:block;width:100%;background:#1a0808;border:1px solid #2a1010;color:#6b3030;font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;text-align:center}
-.dial-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:40;width:min(240px,80vw);border-radius:4px}
+.dial-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:9999;width:min(240px,80vw);border-radius:4px}
 .dial-modal.open{display:block}
 .dial-title{color:#8a8060;font-size:clamp(7px,2vw,9px);text-align:center;margin-bottom:10px;font-family:inherit}
 .dial-display{background:#0a0a0a;border:1px solid #222;color:#aaa;font-family:inherit;font-size:clamp(16px,4vw,22px);text-align:center;padding:10px;margin-bottom:10px;letter-spacing:2px}
@@ -64,16 +64,16 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .dial-center-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#cc9944;font-family:inherit;font-size:clamp(20px,5vw,28px);pointer-events:none;text-shadow:0 0 8px rgba(204,153,68,0.5)}
 .dial-actions{display:flex;gap:6px;margin-top:8px}
 .dial-actions button{flex:1}
-.tutorial{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:48;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;cursor:pointer}
+.tutorial{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;cursor:pointer}
 .tutorial.open{display:flex}
 .tut-text{color:#aaa;font-family:inherit;font-size:clamp(9px,2.5vw,11px);line-height:2.4;margin-bottom:16px}
 .tut-step{color:#555;font-family:inherit;font-size:clamp(7px,1.8vw,8px)}
 .tut-icon{font-size:clamp(24px,6vw,32px);margin-bottom:12px}
-.act-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:45;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.act-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 .act-overlay.open{display:flex}
 .act-title{color:#6b0000;font-family:inherit;font-size:clamp(12px,3.5vw,16px);margin-bottom:16px;animation:blink 1.2s infinite}
 .act-desc{color:#555;font-family:inherit;font-size:clamp(8px,2.2vw,10px);line-height:2.2}
-.win-screen{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.96);z-index:50;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.win-screen{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .win-screen.open{display:flex}
 .win-title{color:#288828;font-family:inherit;font-size:clamp(10px,3vw,14px);animation:blink 1.2s infinite;margin-bottom:24px}
 .win-text{color:#404040;font-family:inherit;font-size:clamp(8px,2.2vw,10px);line-height:2.2;margin-bottom:20px}
@@ -115,7 +115,6 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   .inv-slots{flex-wrap:wrap;justify-content:center}
   .inv-slot{width:44px;height:44px}
   .nav-btn{flex:1;min-height:44px;font-size:clamp(10px,3vw,12px)}
-  .code-modal,.dial-modal,.doc-modal{position:fixed!important;z-index:9999!important}
 }
 </style>
 </head>
@@ -1455,7 +1454,7 @@ document.getElementById('dial-ok').addEventListener('click',()=>{
         setMsg('금고가 열렸다! 오래된 녹음테이프가 있다. [녹음테이프 획득]');
       },300);
     } else {
-      sfxWrong();haptic([50,30,50]);flash();setMsg('조합이 틀렸다.');
+      sfxWrong();haptic([50,30,50]);flash();changeSanity(-10);setMsg('조합이 틀렸다.');
       G.dialSeq=[];G.dialVal=0;dialAngle=0;dialPrevVal=-1;updateDialDisplay();drawDial();
     }
   } else {
@@ -1470,10 +1469,12 @@ let actTimer=null;
 function closeAct(){
   if(actTimer)clearTimeout(actTimer);actTimer=null;
   document.getElementById('act-overlay').classList.remove('open');
+  document.getElementById('nav-area').style.display='flex';
   G.modalOpen=null;
 }
 function showActTitle(act){
   G.modalOpen='act';sfxActTransition();startBGM(act);
+  document.getElementById('nav-area').style.display='none';
   const titles={1:'Act 1: 감금',2:'Act 2: 진실',3:'Act 3: 탈출'};
   const descs={1:'세인트 머시 정신병원 1층',2:'지하에 숨겨진 비밀',3:'최후의 탈출'};
   document.getElementById('act-title').textContent=titles[act]||'';
@@ -1880,7 +1881,7 @@ function setupCodePadEvents(){
       sfxCorrect();setTimeout(()=>{closeCodePad();addItem('fuse');G.flags.nurse=true;flash('#004400');sfxPickup();setMsg('정답! 캐비닛이 열렸다. 오래된 퓨즈가 있다. [퓨즈 획득]')},300);
     } else {
       document.getElementById('code-led').className='code-led wrong';
-      sfxWrong();flash();setMsg('비밀번호가 틀렸다.');
+      sfxWrong();flash();changeSanity(-10);setMsg('비밀번호가 틀렸다.');
       setTimeout(()=>{G.code='';updateCodeDisplay();document.getElementById('code-led').className='code-led'},700);
     }
   });
