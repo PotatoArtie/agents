@@ -612,11 +612,12 @@ let currentBgmAct = 0;
 let ambNodes = [];
 let currentAmbRoom = '';
 
+function stopAudioNodes(arr) {
+  arr.forEach(n => { try { if(n.stop) n.stop() } catch(e){} try { n.disconnect() } catch(e){} });
+}
 function stopBGM() {
-  bgmNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
-  bgmNodes = [];
-  ambNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
-  ambNodes = [];
+  stopAudioNodes(bgmNodes); bgmNodes = []; bgmMaster = null;
+  stopAudioNodes(ambNodes); ambNodes = []; currentAmbRoom = '';
 }
 
 function makeDrone(master, freq, type, detune, filterFreq, vol) {
@@ -635,17 +636,26 @@ function startBGM(act) {
   if (!audioCtx) return;
   act = act || 1;
   if (currentBgmAct === act && bgmNodes.length > 0) return;
-  stopBGM();
-  currentBgmAct = act;
-  bgmStarted = true;
+  // Fade out old BGM before stopping
+  if (bgmMaster) {
+    try { bgmMaster.gain.setValueAtTime(bgmMaster.gain.value, audioCtx.currentTime);
+      bgmMaster.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4); } catch(e){}
+  }
+  const hadOld = bgmNodes.length > 0;
+  setTimeout(() => {
+    stopBGM();
+    currentBgmAct = act;
+    bgmStarted = true;
+    bgmMaster = audioCtx.createGain();
+    bgmMaster.gain.setValueAtTime(0, audioCtx.currentTime);
+    bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
+    bgmMaster.connect(audioCtx.destination);
+    bgmNodes.push(bgmMaster);
+    buildBGMForAct(act);
+  }, hadOld ? 400 : 0);
+}
 
-  bgmMaster = audioCtx.createGain();
-  bgmMaster.gain.value = 0;
-  bgmMaster.connect(audioCtx.destination);
-  // Fade in
-  bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
-  bgmNodes.push(bgmMaster);
-
+function buildBGMForAct(act) {
   if (act === 1) {
     // ACT 1: Mystery/Unease — slow breathing pad, minor key
     makeDrone(bgmMaster, 55, 'sawtooth', 0, 200, 0.7);
@@ -721,15 +731,17 @@ function startBGM(act) {
 function updateRoomAmbience(room) {
   if (room === currentAmbRoom) return;
   // Stop previous ambience
-  ambNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
+  stopAudioNodes(ambNodes);
   ambNodes = [];
   currentAmbRoom = room;
   if (!audioCtx) return;
+  // Only create ambience for rooms that have it
+  if (!['r4','r5','r6','r7','r9','r10','r11'].includes(room)) return;
 
   const ambMaster = audioCtx.createGain();
-  ambMaster.gain.value = 0;
-  ambMaster.connect(audioCtx.destination);
+  ambMaster.gain.setValueAtTime(0, audioCtx.currentTime);
   ambMaster.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 2);
+  ambMaster.connect(audioCtx.destination);
   ambNodes.push(ambMaster);
 
   if (room === 'r4') {
@@ -744,7 +756,7 @@ function updateRoomAmbience(room) {
     o.start(); ambNodes.push(o, g, flt);
   } else if (room === 'r5') {
     // Stairwell — wind howling
-    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 4, audioCtx.sampleRate);
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) {
       d[i] = (Math.random() * 2 - 1) * 0.5 * (0.3 + 0.7 * Math.sin(i / d.length * Math.PI * 3));
@@ -758,7 +770,7 @@ function updateRoomAmbience(room) {
     src.start(); ambNodes.push(src, flt, g);
   } else if (room === 'r6' || room === 'r9') {
     // Underground/Sewer — dripping water + flowing
-    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 3, audioCtx.sampleRate);
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.5, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) {
       d[i] = (Math.random() * 2 - 1) * 0.3 * (0.2 + 0.8 * Math.pow(Math.sin(i / d.length * Math.PI * 5), 2));
@@ -813,7 +825,7 @@ function updateRoomAmbience(room) {
     src.start(); ambNodes.push(src, flt2, g2);
   } else if (room === 'r11') {
     // Exit — wind from outside + distant sirens
-    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 3, audioCtx.sampleRate);
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.5, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) {
       d[i] = (Math.random() * 2 - 1) * 0.4 * (0.5 + 0.5 * Math.sin(i / d.length * Math.PI * 2));
