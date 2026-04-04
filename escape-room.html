@@ -132,7 +132,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
     <div class="resource-bars">
       <div class="res-bar-wrap"><span class="res-label">정신</span><div class="res-bar-bg"><div class="res-bar-fill" id="san-bar" style="width:100%;background:#3366aa"></div></div><span class="res-num" id="san-num">100</span></div>
-      <div class="res-bar-wrap" id="bat-wrap" style="display:none"><span class="res-label">전지</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div><span class="res-num" id="bat-num">100</span></div>
+      <div class="res-bar-wrap" id="bat-wrap" style="display:none"><span class="res-label">손전등</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div><span class="res-num" id="bat-num">100</span></div>
     </div>
     <span class="room-num" id="room-num">ROOM 01</span>
   </div>
@@ -2017,6 +2017,7 @@ function setupNav(){
 canvas.addEventListener('click',e=>{
   if(G.pad||G.modalOpen)return;
   const{vx,vy}=getVirtualCoords(e.clientX,e.clientY);
+  flashlightPos={x:vx,y:vy,t:G.t};
   const z=getZone(vx,vy);
   if(!z){if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.');return}
   sfxClick();handleClick(z.id);
@@ -2027,6 +2028,7 @@ canvas.addEventListener('touchstart',e=>{
   if(G.pad||G.modalOpen)return;
   const t=e.changedTouches[0];
   const{vx,vy}=getVirtualCoords(t.clientX,t.clientY);
+  flashlightPos={x:vx,y:vy,t:G.t};
   const z=getZone(vx,vy);
   if(z){showTouchFeedback(z);sfxClick();handleClick(z.id)}
   else{if(G.sel)setMsg(ITEMS[G.sel].name+': 여기에 사용할 수 없다.')}
@@ -2078,6 +2080,24 @@ function updateFlicker(){
 }
 
 // ===== TOUCH FEEDBACK =====
+// Flashlight effect for dark rooms
+let flashlightPos=null;
+function drawFlashlight(){
+  if(!flashlightPos||!DARK_ROOMS.includes(G.room)||G.battery<=0)return;
+  const elapsed=G.t-flashlightPos.t;
+  if(elapsed>2000)return;
+  const fade=Math.max(0,1-elapsed/2000);
+  const cx=flashlightPos.x*S,cy=flashlightPos.y*S,r=40*S;
+  ctx.save();
+  const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  grad.addColorStop(0,'rgba(255,240,200,'+0.35*fade+')');
+  grad.addColorStop(0.4,'rgba(255,240,200,'+0.15*fade+')');
+  grad.addColorStop(1,'rgba(255,240,200,0)');
+  ctx.fillStyle=grad;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
 function drawTouchFeedback(){
   if(G.touchFeedback&&G.t<G.touchFeedback.until){
     const z=G.touchFeedback.zone;
@@ -2547,6 +2567,7 @@ function drawRoom6(fv,t){
 
   ctx.restore();
 
+  drawFlashlight();
   drawTouchFeedback();
 }
 
@@ -2753,6 +2774,7 @@ function drawRoom9(fv,t){
 
   ctx.restore();
 
+  drawFlashlight();
   drawTouchFeedback();
 }
 
