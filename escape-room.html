@@ -10,7 +10,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{background:#000;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;height:100%}
-body{display:flex;justify-content:center;align-items:flex-start;padding-top:env(safe-area-inset-top)}
+body{display:flex;justify-content:center;align-items:center;padding-top:env(safe-area-inset-top)}
 .game-wrap{width:100%;max-width:640px;font-family:'Press Start 2P','Courier New',monospace;padding-bottom:env(safe-area-inset-bottom)}
 .title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:8px 8px 0 0}
 .title-text{color:#6b0000;font-size:clamp(7px,2vw,10px);letter-spacing:1px}
@@ -55,14 +55,15 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .doc-title{color:#bb8855;font-size:clamp(9px,2.5vw,11px);text-align:center;margin-bottom:12px;font-family:inherit;border-bottom:1px solid #2a1a1a;padding-bottom:8px}
 .doc-body{color:#a09898;font-size:clamp(9px,2.5vw,11px);line-height:2;font-family:inherit;margin-bottom:12px;white-space:pre-line}
 .doc-close{display:block;width:100%;background:#1a0808;border:1px solid #2a1010;color:#6b3030;font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;text-align:center}
-.dial-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:40;width:min(220px,75vw);border-radius:4px}
+.dial-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:40;width:min(240px,80vw);border-radius:4px}
 .dial-modal.open{display:block}
 .dial-title{color:#8a8060;font-size:clamp(7px,2vw,9px);text-align:center;margin-bottom:10px;font-family:inherit}
 .dial-display{background:#0a0a0a;border:1px solid #222;color:#aaa;font-family:inherit;font-size:clamp(16px,4vw,22px);text-align:center;padding:10px;margin-bottom:10px;letter-spacing:2px}
-.dial-btns{display:flex;gap:6px;justify-content:center;margin-bottom:8px}
-.dial-btn{background:#111;border:1px solid #333;color:#888;font-family:inherit;font-size:clamp(10px,3vw,14px);padding:10px 18px;cursor:pointer;min-width:44px;min-height:44px}
-.dial-btn:hover{background:#222}
-.dial-btn:active{background:#333}
+.dial-wheel-wrap{position:relative;width:200px;height:200px;margin:0 auto 10px;touch-action:none}
+.dial-wheel-wrap canvas{display:block;width:200px;height:200px}
+.dial-center-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#cc9944;font-family:inherit;font-size:clamp(20px,5vw,28px);pointer-events:none;text-shadow:0 0 8px rgba(204,153,68,0.5)}
+.dial-actions{display:flex;gap:6px;margin-top:8px}
+.dial-actions button{flex:1}
 .tutorial{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:48;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;cursor:pointer}
 .tutorial.open{display:flex}
 .tut-text{color:#aaa;font-family:inherit;font-size:clamp(9px,2.5vw,11px);line-height:2.4;margin-bottom:16px}
@@ -115,6 +116,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   .inv-slot{width:44px;height:44px}
   .nav-area{left:0;right:0;bottom:0;display:flex;gap:4px;padding:4px}
   .nav-btn{flex:1;min-height:48px;font-size:clamp(10px,3vw,12px)}
+  .code-modal,.dial-modal,.doc-modal{position:fixed!important;z-index:9999!important}
 }
 </style>
 </head>
@@ -124,7 +126,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
     <div class="resource-bars">
       <div class="res-bar-wrap"><span class="res-label">정신</span><div class="res-bar-bg"><div class="res-bar-fill" id="san-bar" style="width:100%;background:#3366aa"></div></div><span class="res-num" id="san-num">100</span></div>
-      <div class="res-bar-wrap"><span class="res-label">전지</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div><span class="res-num" id="bat-num">100</span></div>
+      <div class="res-bar-wrap" id="bat-wrap" style="display:none"><span class="res-label">전지</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div><span class="res-num" id="bat-num">100</span></div>
     </div>
     <span class="room-num" id="room-num">ROOM 01</span>
   </div>
@@ -155,15 +157,15 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <div class="dial-modal" id="dial-modal">
       <div class="dial-title">[ COMBINATION SAFE ]</div>
       <div class="dial-display" id="dial-display">00</div>
-      <div class="dial-btns">
-        <button class="dial-btn" id="dial-left5" style="font-size:clamp(8px,2vw,10px)">&laquo;5</button>
-        <button class="dial-btn" id="dial-left">&larr;</button>
-        <button class="dial-btn" id="dial-right">&rarr;</button>
-        <button class="dial-btn" id="dial-right5" style="font-size:clamp(8px,2vw,10px)">5&raquo;</button>
-        <button class="dial-btn" id="dial-ok">OK</button>
+      <div class="dial-wheel-wrap">
+        <canvas id="dial-canvas" width="200" height="200"></canvas>
+        <div class="dial-center-num" id="dial-center-num">00</div>
       </div>
       <div style="text-align:center;color:#555;font-size:7px;font-family:inherit" id="dial-step">1 / 3</div>
-      <div style="margin-top:8px"><button class="doc-close" id="dial-cancel">취소</button></div>
+      <div class="dial-actions">
+        <button class="doc-close" id="dial-cancel">취소</button>
+        <button class="btn-ok" id="dial-ok" style="font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;border:1px solid #1e1e1e;min-height:34px">확인</button>
+      </div>
     </div>
     <div class="tutorial" id="tutorial">
       <div class="tut-icon" id="tut-icon"></div>
@@ -195,10 +197,15 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <span class="inv-sel-name" id="inv-sel-name"></span>
     <button class="hint-btn" id="hint-btn">?</button>
   </div>
+  <div class="sound-guide" style="background:#0a0608;border:1px solid #1a0a10;border-top:none;padding:10px 14px;text-align:center;font-family:inherit">
+    <span style="color:#5a4a50;font-size:clamp(8px,2.2vw,10px);line-height:1.8">&#128264; 소리가 안 들리시나요?<br>무음모드일 경우 소리가 안 들릴 수 있어요!<br>무음모드를 해제해보세요!</span>
+  </div>
+  <!--
   <div style="text-align:center;margin-top:4px">
     <button id="dbg-toggle" style="background:#111;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;padding:4px 12px;cursor:pointer">DEV</button>
   </div>
   <pre id="dbg-panel" style="display:none;background:#0a0a0a;border:1px solid #333;color:#0f0;font-family:monospace;font-size:10px;padding:8px;margin:4px auto;max-width:640px;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></pre>
+  -->
 </div>
 <script>
 const canvas = document.getElementById('gc');
@@ -210,22 +217,24 @@ const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
 const _dbgPanel = document.getElementById('dbg-panel');
 const _dbgToggle = document.getElementById('dbg-toggle');
 let _dbgOn = false;
-_dbgToggle.addEventListener('click', () => {
-  _dbgOn = !_dbgOn;
-  _dbgPanel.style.display = _dbgOn ? 'block' : 'none';
-  _dbgToggle.style.color = _dbgOn ? '#0f0' : '#555';
-  if (_dbgOn) dbg('=== Debug panel opened ===');
-  if (_dbgOn && audioCtx) {
-    dbg('audioCtx.state = ' + audioCtx.state);
-    dbg('bgmStarted = ' + bgmStarted);
-    dbg('bgmNodes.length = ' + (typeof bgmNodes !== 'undefined' ? bgmNodes.length : 'N/A'));
-    dbg('audioCtx.destination.numberOfInputs = ' + audioCtx.destination.numberOfInputs);
-    dbg('audioCtx.sampleRate = ' + audioCtx.sampleRate);
-    dbg('audioCtx.baseLatency = ' + (audioCtx.baseLatency || 'N/A'));
-  } else if (_dbgOn) {
-    dbg('audioCtx = null (not created yet)');
-  }
-});
+if (_dbgToggle) {
+  _dbgToggle.addEventListener('click', () => {
+    _dbgOn = !_dbgOn;
+    if (_dbgPanel) _dbgPanel.style.display = _dbgOn ? 'block' : 'none';
+    _dbgToggle.style.color = _dbgOn ? '#0f0' : '#555';
+    if (_dbgOn) dbg('=== Debug panel opened ===');
+    if (_dbgOn && audioCtx) {
+      dbg('audioCtx.state = ' + audioCtx.state);
+      dbg('bgmStarted = ' + bgmStarted);
+      dbg('bgmNodes.length = ' + (typeof bgmNodes !== 'undefined' ? bgmNodes.length : 'N/A'));
+      dbg('audioCtx.destination.numberOfInputs = ' + audioCtx.destination.numberOfInputs);
+      dbg('audioCtx.sampleRate = ' + audioCtx.sampleRate);
+      dbg('audioCtx.baseLatency = ' + (audioCtx.baseLatency || 'N/A'));
+    } else if (_dbgOn) {
+      dbg('audioCtx = null (not created yet)');
+    }
+  });
+}
 function dbg(msg) {
   if (!_dbgPanel) return;
   const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',fractionalSecondDigits:3});
@@ -1143,8 +1152,11 @@ function changeSanity(amt){
   if(G.sanity<=0&&!G.ended) gameOverSanity();
 }
 
+function showBatWrap(show){document.getElementById('bat-wrap').style.display=show?'flex':'none'}
+
 function changeBattery(amt){
   G.battery=Math.max(0,Math.min(100,G.battery+amt));
+  showBatWrap(true);
   const bar=document.getElementById('bat-bar');
   bar.style.width=G.battery+'%';
   document.getElementById('bat-num').textContent=G.battery;
@@ -1311,14 +1323,110 @@ function closeDoc(){
 
 document.getElementById('doc-close').addEventListener('click',closeDoc);
 
-// ===== DIAL SAFE =====
+// ===== DIAL SAFE (rotary wheel) =====
+const dialCanvas = document.getElementById('dial-canvas');
+const dialCtx = dialCanvas.getContext('2d');
+let dialAngle = 0, dialDragging = false, dialLastAngle = 0, dialPrevVal = -1;
+
+function haptic(ms){try{navigator.vibrate(ms||10)}catch(e){}}
+
+function drawDial(){
+  const cx=100,cy=100,r=85,ir=50;
+  dialCtx.clearRect(0,0,200,200);
+  // outer ring
+  dialCtx.beginPath();dialCtx.arc(cx,cy,r,0,Math.PI*2);
+  dialCtx.strokeStyle='#333';dialCtx.lineWidth=2;dialCtx.stroke();
+  // inner ring
+  dialCtx.beginPath();dialCtx.arc(cx,cy,ir,0,Math.PI*2);
+  dialCtx.strokeStyle='#222';dialCtx.lineWidth=1;dialCtx.stroke();
+  // tick marks + numbers
+  for(let i=0;i<50;i++){
+    const a = (i/50)*Math.PI*2 - Math.PI/2;
+    const isMajor = i%5===0;
+    const outerR = r-2, innerR = isMajor ? r-14 : r-8;
+    const x1=cx+Math.cos(a)*outerR, y1=cy+Math.sin(a)*outerR;
+    const x2=cx+Math.cos(a)*innerR, y2=cy+Math.sin(a)*innerR;
+    dialCtx.beginPath();dialCtx.moveTo(x1,y1);dialCtx.lineTo(x2,y2);
+    dialCtx.strokeStyle=isMajor?'#888':'#444';dialCtx.lineWidth=isMajor?2:1;dialCtx.stroke();
+    if(isMajor){
+      const tx=cx+Math.cos(a)*(r-22), ty=cy+Math.sin(a)*(r-22);
+      dialCtx.fillStyle='#777';dialCtx.font='9px monospace';dialCtx.textAlign='center';dialCtx.textBaseline='middle';
+      dialCtx.fillText(String(i).padStart(2,'0'),tx,ty);
+    }
+  }
+  // top indicator triangle
+  dialCtx.beginPath();dialCtx.moveTo(cx,cy-r+2);dialCtx.lineTo(cx-5,cy-r-8);dialCtx.lineTo(cx+5,cy-r-8);dialCtx.closePath();
+  dialCtx.fillStyle='#cc4444';dialCtx.fill();
+  // rotating knob indicator
+  const knobA = dialAngle - Math.PI/2;
+  const kx=cx+Math.cos(knobA)*65, ky=cy+Math.sin(knobA)*65;
+  dialCtx.beginPath();dialCtx.arc(kx,ky,5,0,Math.PI*2);
+  dialCtx.fillStyle='#cc9944';dialCtx.fill();
+  dialCtx.beginPath();dialCtx.arc(kx,ky,5,0,Math.PI*2);
+  dialCtx.strokeStyle='#aa7722';dialCtx.lineWidth=1;dialCtx.stroke();
+  // center fill
+  const grad=dialCtx.createRadialGradient(cx,cy,0,cx,cy,ir);
+  grad.addColorStop(0,'#1a1a1a');grad.addColorStop(1,'#0a0a0a');
+  dialCtx.beginPath();dialCtx.arc(cx,cy,ir-1,0,Math.PI*2);
+  dialCtx.fillStyle=grad;dialCtx.fill();
+}
+
+function angleToDial(angle){
+  let v=Math.round((((angle%(Math.PI*2))+(Math.PI*2))%(Math.PI*2))/(Math.PI*2)*50)%50;
+  return v;
+}
+
+function getPointerAngle(e,canvas){
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX||e.touches[0].clientX)-rect.left-rect.width/2;
+  const y=(e.clientY||e.touches[0].clientY)-rect.top-rect.height/2;
+  return Math.atan2(y,x);
+}
+
+function onDialPointerDown(e){
+  e.preventDefault();
+  dialDragging=true;
+  dialLastAngle=getPointerAngle(e,dialCanvas);
+}
+function onDialPointerMove(e){
+  if(!dialDragging)return;
+  e.preventDefault();
+  const a=getPointerAngle(e,dialCanvas);
+  let delta=a-dialLastAngle;
+  if(delta>Math.PI)delta-=Math.PI*2;
+  if(delta<-Math.PI)delta+=Math.PI*2;
+  dialAngle+=delta;
+  dialLastAngle=a;
+  const newVal=angleToDial(dialAngle);
+  if(newVal!==dialPrevVal){
+    G.dialVal=newVal;
+    haptic(8);
+    sfxNumpad();
+    dialPrevVal=newVal;
+  }
+  updateDialDisplay();
+  drawDial();
+}
+function onDialPointerUp(){dialDragging=false}
+
+dialCanvas.addEventListener('mousedown',onDialPointerDown);
+dialCanvas.addEventListener('mousemove',onDialPointerMove);
+dialCanvas.addEventListener('mouseup',onDialPointerUp);
+dialCanvas.addEventListener('mouseleave',onDialPointerUp);
+dialCanvas.addEventListener('touchstart',onDialPointerDown,{passive:false});
+dialCanvas.addEventListener('touchmove',onDialPointerMove,{passive:false});
+dialCanvas.addEventListener('touchend',onDialPointerUp);
+dialCanvas.addEventListener('touchcancel',onDialPointerUp);
+
 function openDial(target){
   G.modalOpen='dial';
   G.dialVal=0;
   G.dialSeq=[];
   G.dialTarget=target;
+  dialAngle=0;dialPrevVal=-1;
   document.getElementById('dial-modal').classList.add('open');
   updateDialDisplay();
+  drawDial();
 }
 
 function closeDial(){
@@ -1327,21 +1435,20 @@ function closeDial(){
 }
 
 function updateDialDisplay(){
-  document.getElementById('dial-display').textContent=String(G.dialVal).padStart(2,'0');
+  const str=String(G.dialVal).padStart(2,'0');
+  document.getElementById('dial-display').textContent=str;
+  document.getElementById('dial-center-num').textContent=str;
   document.getElementById('dial-step').textContent=(G.dialSeq.length+1)+' / '+G.dialTarget.length;
 }
 
-document.getElementById('dial-left').addEventListener('click',()=>{G.dialVal=(G.dialVal-1+50)%50;sfxNumpad();updateDialDisplay()});
-document.getElementById('dial-right').addEventListener('click',()=>{G.dialVal=(G.dialVal+1)%50;sfxNumpad();updateDialDisplay()});
-document.getElementById('dial-left5').addEventListener('click',()=>{G.dialVal=(G.dialVal-5+50)%50;sfxNumpad();updateDialDisplay()});
-document.getElementById('dial-right5').addEventListener('click',()=>{G.dialVal=(G.dialVal+5)%50;sfxNumpad();updateDialDisplay()});
 document.getElementById('dial-ok').addEventListener('click',()=>{
+  haptic(20);
   G.dialSeq.push(G.dialVal);
   if(G.dialSeq.length>=G.dialTarget.length){
     let ok=true;
     for(let i=0;i<G.dialTarget.length;i++){if(G.dialSeq[i]!==G.dialTarget[i])ok=false}
     if(ok){
-      sfxCorrect();
+      sfxCorrect();haptic(50);
       setTimeout(()=>{
         closeDial();
         G.flags.r4_safe=true;
@@ -1349,12 +1456,12 @@ document.getElementById('dial-ok').addEventListener('click',()=>{
         setMsg('금고가 열렸다! 오래된 녹음테이프가 있다. [녹음테이프 획득]');
       },300);
     } else {
-      sfxWrong();flash();setMsg('조합이 틀렸다.');
-      G.dialSeq=[];G.dialVal=0;updateDialDisplay();
+      sfxWrong();haptic([50,30,50]);flash();setMsg('조합이 틀렸다.');
+      G.dialSeq=[];G.dialVal=0;dialAngle=0;dialPrevVal=-1;updateDialDisplay();drawDial();
     }
   } else {
-    G.dialVal=0;updateDialDisplay();
-    sfxClick();
+    G.dialVal=0;dialAngle=0;dialPrevVal=-1;updateDialDisplay();drawDial();
+    sfxClick();haptic(15);
   }
 });
 document.getElementById('dial-cancel').addEventListener('click',()=>{closeDial();setMsg(ROOM_MSGS[G.room])});
@@ -1412,7 +1519,7 @@ function restartGame(){
   G.act=1;G.actsShown={};G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
   G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
   Object.keys(G.flags).forEach(k=>G.flags[k]=false);
-  valveClicks=0;batteryTimer=0;
+  valveClicks=0;batteryTimer=0;sanityTimer=0;
   msgHistory.length=0;msgIdx=-1;
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   hintCount=0;firstItemShown=false;lastAction=0;
@@ -1423,6 +1530,7 @@ function restartGame(){
   document.getElementById('bat-bar').style.width='100%';
   document.getElementById('bat-bar').style.background='#33aa44';
   document.getElementById('bat-num').textContent='100';
+  showBatWrap(false);
   closeCodePad();closeDoc();closeDial();
   updateInv();goRoom('r1');showActTitle(1);
   requestAnimationFrame(loop);
@@ -2682,6 +2790,7 @@ canvas.addEventListener('touchstart',resetIdle);
 // ===== MAIN LOOP =====
 let lastT=0;
 let batteryTimer=0;
+let sanityTimer=0;
 function loop(timestamp){
   if(G.ended)return;
   const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
@@ -2690,13 +2799,24 @@ function loop(timestamp){
   // Pulse hint button after 30s idle
   if(G.t-lastAction>30000) document.getElementById('hint-btn').classList.add('pulse');
 
+  // Passive sanity drain over time (every 5s, -1)
+  sanityTimer+=dt;
+  if(sanityTimer>=5000){
+    sanityTimer-=5000;
+    changeSanity(-1);
+  }
+
   // Battery drain in dark rooms
-  if(DARK_ROOMS.includes(G.room)){
+  const inDark=DARK_ROOMS.includes(G.room);
+  if(inDark){
+    showBatWrap(true);
     batteryTimer+=dt;
     if(batteryTimer>=2000){
       batteryTimer-=2000;
       changeBattery(-3);
     }
+  } else {
+    if(G.battery>=100) showBatWrap(false);
   }
 
   ctx.clearRect(0,0,640,360);
