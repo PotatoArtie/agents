@@ -215,22 +215,6 @@ function ensureAudio() {
   }
 }
 
-// Safari-safe: wait until audioCtx is actually running, then call cb
-function whenAudioRunning(cb) {
-  if (!audioCtx) return;
-  if (audioCtx.state === 'running') { cb(); return; }
-  let called = false;
-  function once() { if (called) return; called = true; cb(); }
-  // Try resume() promise first (works in most browsers)
-  audioCtx.resume().then(() => { if (audioCtx.state === 'running') once(); }).catch(()=>{});
-  // Fallback poll for Safari which may not resolve the promise reliably
-  let attempts = 0;
-  const poll = setInterval(() => {
-    attempts++;
-    if (audioCtx.state === 'running') { clearInterval(poll); once(); }
-    else if (attempts > 30) { clearInterval(poll); }
-  }, 50);
-}
 
 function sfxPickup() {
   ensureAudio();
@@ -699,6 +683,7 @@ function makeDrone(master, freq, type, detune, filterFreq, vol) {
 }
 
 function startBGM(act) {
+  ensureAudio();
   if (!audioCtx) return;
   act = act || 1;
   if (bgmStarted && currentBgmAct === act) return;
@@ -706,21 +691,11 @@ function startBGM(act) {
   currentBgmAct = act;
   bgmStarted = true;
 
-  function doStart() {
-    bgmMaster = audioCtx.createGain();
-    bgmMaster.gain.value = 0.035;
-    bgmMaster.connect(audioCtx.destination);
-    bgmNodes.push(bgmMaster);
-    buildBGMForAct(act);
-  }
-
-  let started = false;
-  whenAudioRunning(() => {
-    if (!started && bgmStarted && currentBgmAct === act) {
-      started = true;
-      doStart();
-    }
-  });
+  bgmMaster = audioCtx.createGain();
+  bgmMaster.gain.value = 0.035;
+  bgmMaster.connect(audioCtx.destination);
+  bgmNodes.push(bgmMaster);
+  buildBGMForAct(act);
 }
 
 function buildBGMForAct(act) {
@@ -807,20 +782,10 @@ function updateRoomAmbience(room) {
   // Only create ambience for rooms that have it
   if (!['r4','r5','r6','r7','r9','r10','r11'].includes(room)) return;
 
-  function buildAmbience() {
-    // Guard: room may have changed while waiting
-    if (currentAmbRoom !== room) return;
-    const ambMaster = audioCtx.createGain();
-    ambMaster.gain.value = 0.025;
-    ambMaster.connect(audioCtx.destination);
-    ambNodes.push(ambMaster);
-    _buildRoomAmbience(room, ambMaster);
-  }
-
-  whenAudioRunning(buildAmbience);
-}
-
-function _buildRoomAmbience(room, ambMaster) {
+  const ambMaster = audioCtx.createGain();
+  ambMaster.gain.value = 0.025;
+  ambMaster.connect(audioCtx.destination);
+  ambNodes.push(ambMaster);
 
   if (room === 'r4') {
     // Surveillance room — electronic hum + static
