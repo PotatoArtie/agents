@@ -193,8 +193,12 @@ let audioCtx = null;
 let bgmStarted = false;
 
 function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(()=>{});
+  }
 }
 
 function sfxPickup() {
@@ -633,26 +637,20 @@ function makeDrone(master, freq, type, detune, filterFreq, vol) {
 }
 
 function startBGM(act) {
+  ensureAudio();
   if (!audioCtx) return;
   act = act || 1;
   if (currentBgmAct === act && bgmNodes.length > 0) return;
-  // Fade out old BGM before stopping
-  if (bgmMaster) {
-    try { bgmMaster.gain.setValueAtTime(bgmMaster.gain.value, audioCtx.currentTime);
-      bgmMaster.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4); } catch(e){}
-  }
-  const hadOld = bgmNodes.length > 0;
-  setTimeout(() => {
-    stopBGM();
-    currentBgmAct = act;
-    bgmStarted = true;
-    bgmMaster = audioCtx.createGain();
-    bgmMaster.gain.setValueAtTime(0, audioCtx.currentTime);
-    bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
-    bgmMaster.connect(audioCtx.destination);
-    bgmNodes.push(bgmMaster);
-    buildBGMForAct(act);
-  }, hadOld ? 400 : 0);
+  // Stop old BGM immediately (no setTimeout — preserves mobile gesture context)
+  stopBGM();
+  currentBgmAct = act;
+  bgmStarted = true;
+  bgmMaster = audioCtx.createGain();
+  bgmMaster.gain.setValueAtTime(0, audioCtx.currentTime);
+  bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
+  bgmMaster.connect(audioCtx.destination);
+  bgmNodes.push(bgmMaster);
+  buildBGMForAct(act);
 }
 
 function buildBGMForAct(act) {
@@ -734,6 +732,7 @@ function updateRoomAmbience(room) {
   stopAudioNodes(ambNodes);
   ambNodes = [];
   currentAmbRoom = room;
+  ensureAudio();
   if (!audioCtx) return;
   // Only create ambience for rooms that have it
   if (!['r4','r5','r6','r7','r9','r10','r11'].includes(room)) return;
@@ -843,12 +842,19 @@ function updateRoomAmbience(room) {
 
 function initAudioOnInteraction() {
   ensureAudio();
-  startBGM(G.act || 1);
-  document.removeEventListener('click', initAudioOnInteraction);
-  document.removeEventListener('touchstart', initAudioOnInteraction);
+  if (audioCtx && audioCtx.state !== 'running') {
+    audioCtx.resume().then(() => startBGM(G.act || 1)).catch(()=>{});
+  } else {
+    startBGM(G.act || 1);
+  }
+  removeAudioListeners();
 }
-document.addEventListener('click', initAudioOnInteraction);
-document.addEventListener('touchstart', initAudioOnInteraction);
+function removeAudioListeners() {
+  ['click','touchstart','touchend','keydown'].forEach(e =>
+    document.removeEventListener(e, initAudioOnInteraction));
+}
+['click','touchstart','touchend','keydown'].forEach(e =>
+  document.addEventListener(e, initAudioOnInteraction, {once:false}));
 
 // ===== GAME STATE =====
 const G = {
