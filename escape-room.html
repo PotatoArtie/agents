@@ -19,7 +19,18 @@ body{display:flex;justify-content:center;align-items:center;padding-top:env(safe
 .rank-btn:active{background:#1a0a0a}
 .rank-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .rank-modal.open{display:flex}
-.rank-modal-content{background:#0a0a0a;border:1px solid #333;padding:20px;border-radius:4px;width:min(300px,85vw);max-height:80vh;overflow-y:auto}
+.rank-modal-content{background:#0a0008;border:2px solid #331a1a;padding:20px 16px;border-radius:0;width:min(320px,88vw);max-height:80vh;overflow-y:auto;box-shadow:0 0 30px rgba(100,0,0,0.3),inset 0 0 60px rgba(0,0,0,0.5);image-rendering:pixelated}
+.rank-header{color:#cc9944;font-size:clamp(11px,3vw,14px);font-family:inherit;text-align:center;padding-bottom:10px;border-bottom:2px solid #331a1a;margin-bottom:12px;letter-spacing:2px;text-shadow:0 0 8px rgba(204,153,68,0.4)}
+.rank-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid #1a0a0a;font-family:inherit;font-size:clamp(8px,2.2vw,10px);letter-spacing:1px}
+.rank-entry:nth-child(1){color:#ffd700}
+.rank-entry:nth-child(2){color:#c0c0c0}
+.rank-entry:nth-child(3){color:#cd7f32}
+.rank-entry.current{background:rgba(204,153,68,0.1);border-left:2px solid #cc9944}
+.rank-pos{min-width:24px;text-align:center}
+.rank-name{flex:1;margin:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-time{min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.rank-date{min-width:70px;text-align:right;color:#444;font-size:clamp(7px,1.8vw,8px)}
+.rank-empty{color:#333;font-size:clamp(8px,2vw,10px);font-family:inherit;text-align:center;padding:20px 0;letter-spacing:1px}
 .title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:0}
 .title-text{color:#6b0000;font-size:clamp(7px,2vw,10px);letter-spacing:1px}
 .room-num{color:#3a1a1a;font-size:clamp(7px,1.8vw,9px)}
@@ -219,7 +230,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 </div>
 <div class="rank-modal" id="rank-modal">
   <div class="rank-modal-content">
-    <div style="color:#cc9944;font-size:clamp(11px,3vw,14px);font-family:inherit;margin-bottom:16px">&#127942; ESCAPE RANKING</div>
+    <div class="rank-header">&#127942; ESCAPE RANKING &#127942;</div>
     <div id="rank-list" style="margin-bottom:16px"></div>
     <button class="doc-close" id="rank-close">닫기</button>
   </div>
@@ -260,11 +271,12 @@ function saveRankingOnline(timeMs,name){
   fbDb.ref('rankings').push({time:timeMs,name:name||'???',date:new Date().toLocaleDateString('ko-KR'),timestamp:Date.now()});
 }
 function loadRankingsOnline(callback,fallback){
-  fbDb.ref('rankings').orderByChild('time').limitToFirst(10).once('value',snap=>{
+  fbDb.ref('rankings').orderByChild('time').limitToFirst(10).once('value').then(snap=>{
     const list=[];
     snap.forEach(child=>list.push(child.val()));
     callback(list);
-  }).catch(()=>{
+  }).catch(err=>{
+    console.warn('Firebase ranking load failed:',err);
     if(fallback)fallback();
   });
 }
@@ -3018,15 +3030,15 @@ function getRankings(){
   return JSON.parse(localStorage.getItem('smp_rankings')||'[]');
 }
 function buildRankingHTML(rankings,currentTime){
-  let html='<div style="margin-top:16px;border-top:1px solid #2a2a2a;padding-top:12px">';
-  html+='<div style="color:#cc9944;font-size:clamp(9px,2.5vw,11px);margin-bottom:10px;font-family:inherit">\uD83C\uDFC6 RANKING</div>';
-  if(rankings.length===0){html+='<div style="color:#444;font-size:9px;font-family:inherit">기록 없음</div>'}
+  let html='<div style="margin-top:12px">';
+  const medals=['&#9813;','&#9814;','&#9815;'];
+  if(rankings.length===0){html+='<div class="rank-empty">- NO RECORDS -</div>'}
   rankings.forEach((r,i)=>{
     const isCurrent=currentTime&&r.time===currentTime;
-    const color=isCurrent?'#cc9944':'#555';
-    const prefix=isCurrent?'\u25B6 ':'  ';
+    const cls='rank-entry'+(isCurrent?' current':'');
+    const pos=i<3?medals[i]:(i+1);
     const name=r.name||'???';
-    html+='<div style="color:'+color+';font-size:clamp(8px,2vw,10px);font-family:inherit;line-height:2.2">'+prefix+(i+1)+'. '+name+' '+formatTime(r.time)+' \u2014 '+r.date+'</div>';
+    html+='<div class="'+cls+'"><span class="rank-pos">'+pos+'</span><span class="rank-name">'+name+'</span><span class="rank-time">'+formatTime(r.time)+'</span><span class="rank-date">'+r.date+'</span></div>';
   });
   html+='</div>';
   return html;
