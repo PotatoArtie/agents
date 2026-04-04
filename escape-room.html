@@ -158,7 +158,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 </head>
 <body>
 <div class="landing" id="landing">
-  <div class="landing-skull">☠</div>
+  <canvas id="landing-art" width="320" height="240" style="image-rendering:pixelated;image-rendering:crisp-edges;width:min(320px,85vw);height:auto;margin-bottom:16px;border:1px solid #1a0810;border-radius:4px"></canvas>
   <div class="landing-title">SAINT MERCY<br>PSYCHIATRIC HOSPITAL</div>
   <div class="landing-sub">세인트 머시 정신병원<br>— 방탈출 호러 —</div>
   <button class="landing-btn" id="landing-start">게임 시작하기</button>
@@ -3700,6 +3700,156 @@ function init(){
   // Show landing page, don't start game yet
 }
 init();
+
+// ===== LANDING ART =====
+(function drawLandingArt(){
+  const cv=document.getElementById('landing-art');
+  if(!cv)return;
+  const c=cv.getContext('2d');
+  const W=320,H=240;
+  c.imageSmoothingEnabled=false;
+  function px(x,y,w,h,col){c.fillStyle=col;c.fillRect(x,y,w,h)}
+
+  let t=0;
+  function draw(){
+    t+=0.02;
+    c.clearRect(0,0,W,H);
+
+    // Background — dark gradient
+    px(0,0,W,H,'#050310');
+    // Ceiling
+    px(0,0,W,30,'#0a0818');
+    // Floor — dark tiles
+    px(0,190,W,50,'#0c0a12');
+    for(let i=0;i<16;i++){
+      px(i*20,190,19,24,(i%2===0)?'#0e0c14':'#100e16');
+      px(i*20,214,19,26,(i%2===1)?'#0e0c14':'#100e16');
+    }
+
+    // Walls — perspective corridor
+    c.save();
+    // Left wall
+    c.fillStyle='#1a1422';
+    c.beginPath();c.moveTo(0,30);c.lineTo(0,190);c.lineTo(100,190);c.lineTo(120,30);c.closePath();c.fill();
+    // Right wall
+    c.beginPath();c.moveTo(W,30);c.lineTo(W,190);c.lineTo(220,190);c.lineTo(200,30);c.closePath();c.fill();
+    c.restore();
+
+    // Wall texture
+    c.globalAlpha=0.15;
+    for(let i=0;i<8;i++){px(10+i*12,40+i*15,2,100-i*10,'#0a0810')}
+    for(let i=0;i<8;i++){px(308-i*12,40+i*15,2,100-i*10,'#0a0810')}
+    c.globalAlpha=1;
+
+    // Corridor end (darkness)
+    px(120,30,80,160,'#030208');
+
+    // EXIT sign — glowing green
+    const exitGlow=0.6+Math.sin(t*2)*0.3;
+    c.globalAlpha=exitGlow;
+    px(140,35,40,12,'#0a3a0a');
+    c.save();c.fillStyle='#00cc00';c.font='bold 10px monospace';
+    c.fillText('EXIT',148,45);c.restore();
+    // Exit glow
+    c.globalAlpha=exitGlow*0.15;
+    px(130,28,60,30,'#00ff00');
+    c.globalAlpha=1;
+
+    // Flickering fluorescent light
+    const flicker=Math.random()>0.95?0.1:0.7+Math.sin(t*8)*0.15;
+    c.globalAlpha=flicker;
+    px(80,28,160,2,'#ffffaa');
+    c.globalAlpha=flicker*0.06;
+    c.beginPath();c.moveTo(100,30);c.lineTo(220,30);c.lineTo(260,190);c.lineTo(60,190);c.closePath();c.fillStyle='#ffffcc';c.fill();
+    c.globalAlpha=1;
+
+    // Hospital bed (left side)
+    px(15,130,70,30,'#252c32');
+    px(17,120,66,12,'#404040');
+    // Blood on sheet
+    px(35,118,15,8,'#5a0000');px(40,122,8,10,'#4a0000');
+    // IV stand
+    px(80,80,2,80,'#353840');px(76,76,10,4,'#353840');
+    px(77,72,6,5,'#2a4a5a');
+
+    // Blood handprints on left wall
+    px(30,70,4,12,'#5a0000');px(36,68,4,14,'#4a0000');px(42,70,4,12,'#5a0000');
+    px(32,80,14,6,'#5a0000');
+    // Blood drip
+    px(37,86,3,10,'#4a0000');px(38,96,2,6,'#3a0000');
+
+    // Creepy hands reaching from walls
+    const handWave=Math.sin(t*1.5)*3;
+    // Left wall hands
+    c.save();c.globalAlpha=0.5+Math.sin(t*0.8)*0.15;
+    // Hand 1
+    px(95,90+handWave,14,4,'#3a2828');
+    px(95,86+handWave,3,8,'#3a2828');px(100,84+handWave,3,10,'#3a2828');px(105,86+handWave,3,8,'#3a2828');
+    // Hand 2
+    px(90,140-handWave,16,4,'#3a2828');
+    px(90,136-handWave,3,8,'#3a2828');px(95,134-handWave,3,10,'#3a2828');px(100,136-handWave,3,8,'#3a2828');px(105,135-handWave,3,9,'#3a2828');
+    // Right wall hands
+    px(210,100-handWave,14,4,'#3a2828');
+    px(210,96-handWave,3,8,'#3a2828');px(215,94-handWave,3,10,'#3a2828');px(220,96-handWave,3,8,'#3a2828');
+    px(215,150+handWave,16,4,'#3a2828');
+    px(215,146+handWave,3,8,'#3a2828');px(220,144+handWave,3,10,'#3a2828');px(225,146+handWave,3,8,'#3a2828');px(230,145+handWave,3,9,'#3a2828');
+    c.restore();
+
+    // Player silhouette (center, back facing)
+    const playerY=155+Math.sin(t*0.5)*1;
+    // Body
+    px(150,playerY,20,35,'#0a0a0a');
+    // Head
+    px(153,playerY-12,14,14,'#0a0a0a');
+    // Flashlight beam
+    c.save();
+    c.globalAlpha=0.12;
+    c.fillStyle='#ffeeaa';
+    c.beginPath();
+    c.moveTo(170,playerY+5);c.lineTo(200,playerY-30);c.lineTo(200,playerY+40);c.closePath();
+    c.fill();
+    // Narrow bright core
+    c.globalAlpha=0.25;
+    c.beginPath();
+    c.moveTo(170,playerY+5);c.lineTo(195,playerY-10);c.lineTo(195,playerY+20);c.closePath();
+    c.fill();
+    c.restore();
+    // Flashlight in hand
+    px(168,playerY+3,8,3,'#888');px(169,playerY+4,6,1,'#aaa');
+
+    // Blood trail on floor (leading forward)
+    c.globalAlpha=0.4;
+    px(155,192,10,3,'#4a0000');px(158,196,8,2,'#3a0000');
+    px(156,200,6,2,'#3a0000');px(160,205,4,2,'#2a0000');
+    c.globalAlpha=1;
+
+    // Shadow figure at corridor end
+    c.save();
+    c.globalAlpha=0.3+Math.sin(t*0.7)*0.1;
+    const sx=148+Math.sin(t*0.4)*2;
+    px(sx,55,24,80,'#000');
+    // Head
+    px(sx+4,42,16,16,'#000');
+    // Eyes (subtle red glow)
+    c.globalAlpha=0.4+Math.sin(t*3)*0.2;
+    px(sx+7,48,3,2,'#660000');px(sx+14,48,3,2,'#660000');
+    c.restore();
+
+    // Vignette
+    const grad=c.createRadialGradient(W/2,H/2,60,W/2,H/2,180);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,0.7)');
+    c.fillStyle=grad;c.fillRect(0,0,W,H);
+
+    // CRT scanlines
+    c.globalAlpha=0.08;
+    for(let y=0;y<H;y+=2){px(0,y,W,1,'#000')}
+    c.globalAlpha=1;
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 
 // ===== LANDING PAGE =====
 document.getElementById('landing-start').addEventListener('click', function(){
