@@ -227,6 +227,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">탈출한 순간 내 이름이 기억났다..<br><br>내 이름은?</div>
   <input type="text" id="name-input" maxlength="10" placeholder="이름 입력" autocomplete="off">
   <button class="btn-ok" id="name-submit" style="font-family:inherit;font-size:clamp(9px,2.5vw,11px);padding:10px 24px;cursor:pointer;border:1px solid #1e1e1e;margin-top:12px;min-height:40px">기록하기</button>
+  <button class="btn-cancel" id="name-skip" style="font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px 16px;cursor:pointer;border:1px solid #1a1a1a;margin-top:8px;min-height:34px">사실,, 아직 기억이 안 난다</button>
 </div>
 <div class="rank-modal" id="rank-modal">
   <div class="rank-modal-content">
@@ -271,9 +272,9 @@ function saveRankingOnline(timeMs,name){
   fbDb.ref('rankings').push({time:timeMs,name:name||'???',date:new Date().toLocaleDateString('ko-KR'),timestamp:Date.now()});
 }
 function loadRankingsOnline(callback,fallback){
-  fbDb.ref('rankings').once('value').then(snap=>{
+  fbDb.ref('rankings').get().then(snap=>{
     const list=[];
-    snap.forEach(child=>list.push(child.val()));
+    snap.forEach(child=>{const v=child.val();if(v&&v.time)list.push(v)});
     list.sort((a,b)=>a.time-b.time);
     callback(list.slice(0,10));
   }).catch(err=>{
@@ -1581,12 +1582,20 @@ function showEnding(){
     overlay.classList.add('open');
     input.focus();
     function submitName(){
-      G.playerName=input.value.trim()||'???';
+      const name=input.value.trim();
+      if(!name)return;
+      G.playerName=name;
       overlay.classList.remove('open');
       showEndScreen(isBadEnd);
     }
     document.getElementById('name-submit').onclick=submitName;
     input.onkeydown=function(e){if(e.key==='Enter')submitName()};
+    document.getElementById('name-skip').onclick=function(){
+      G.playerName='???';
+      G.skipRanking=true;
+      overlay.classList.remove('open');
+      showEndScreen(isBadEnd);
+    };
   } else {
     G.playerName='';
     showEndScreen(isBadEnd);
@@ -1620,11 +1629,12 @@ function showEndScreen(isBadEnd){
     document.getElementById('win-end').textContent='';
   }
 
-  // 랭킹 저장
-  if(!isBadEnd){
+  // 랭킹 저장 (스킵하지 않은 경우만)
+  if(!isBadEnd&&!G.skipRanking){
     saveRanking(G.clearTime,G.playerName);
     saveRankingOnline(G.clearTime,G.playerName);
   }
+  G.skipRanking=false;
 
   function showRankingAndRestart(){
     loadRankingsOnline(function(rankings){
