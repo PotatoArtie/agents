@@ -197,6 +197,27 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   <pre id="dbg-panel" style="display:none;background:#0a0a0a;border:1px solid #333;color:#0f0;font-family:monospace;font-size:10px;padding:8px;margin:4px auto;max-width:640px;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></pre>
   -->
 </div>
+<div class="tutorial" id="tutorial">
+  <div class="tut-icon" id="tut-icon"></div>
+  <div class="tut-text" id="tut-text"></div>
+  <div class="tut-step" id="tut-step"></div>
+</div>
+<div class="act-overlay" id="act-overlay">
+  <div class="act-title" id="act-title"></div>
+  <div class="act-desc" id="act-desc"></div>
+  <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
+</div>
+<div class="name-input-overlay" id="name-overlay">
+  <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">사실 나의 이름은...</div>
+  <input type="text" id="name-input" maxlength="10" placeholder="이름 입력" autocomplete="off">
+  <button class="btn-ok" id="name-submit" style="font-family:inherit;font-size:clamp(9px,2.5vw,11px);padding:10px 24px;cursor:pointer;border:1px solid #1e1e1e;margin-top:12px;min-height:40px">기록하기</button>
+</div>
+<div class="win-screen" id="win-screen">
+  <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
+  <div class="win-text" id="win-text"></div>
+  <div class="win-end" id="win-end">-- THE END --</div>
+  <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
+</div>
 <script>
 const canvas = document.getElementById('gc');
 const ctx = canvas.getContext('2d');
@@ -3041,26 +3062,5 @@ function init(){
 }
 init();
 </script>
-<div class="tutorial" id="tutorial">
-  <div class="tut-icon" id="tut-icon"></div>
-  <div class="tut-text" id="tut-text"></div>
-  <div class="tut-step" id="tut-step"></div>
-</div>
-<div class="act-overlay" id="act-overlay">
-  <div class="act-title" id="act-title"></div>
-  <div class="act-desc" id="act-desc"></div>
-  <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
-</div>
-<div class="name-input-overlay" id="name-overlay">
-  <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">사실 나의 이름은...</div>
-  <input type="text" id="name-input" maxlength="10" placeholder="이름 입력" autocomplete="off">
-  <button class="btn-ok" id="name-submit" style="font-family:inherit;font-size:clamp(9px,2.5vw,11px);padding:10px 24px;cursor:pointer;border:1px solid #1e1e1e;margin-top:12px;min-height:40px">기록하기</button>
-</div>
-<div class="win-screen" id="win-screen">
-  <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
-  <div class="win-text" id="win-text"></div>
-  <div class="win-end" id="win-end">-- THE END --</div>
-  <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
-</div>
 </body>
 </html>
