@@ -175,7 +175,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   </div>
   <div class="nav-area" id="nav-area"></div>
   <div class="message-box">
-    <div class="message-text" id="msg">눈을 떴다. 어디인지 모르겠다...</div>
+    <div class="message-text" id="msg">눈을 떴다. 어디인지 모르겠다. 내 이름은 뭐지?...</div>
     <div class="msg-nav" id="msg-nav">
       <button class="msg-nav-btn" id="msg-prev">▲</button>
       <button class="msg-nav-btn" id="msg-next">▼</button>
@@ -208,7 +208,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
 </div>
 <div class="name-input-overlay" id="name-overlay">
-  <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">사실 나의 이름은...</div>
+  <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">탈출한 순간 내 이름이 기억났다..<br><br>내 이름은?</div>
   <input type="text" id="name-input" maxlength="10" placeholder="이름 입력" autocomplete="off">
   <button class="btn-ok" id="name-submit" style="font-family:inherit;font-size:clamp(9px,2.5vw,11px);padding:10px 24px;cursor:pointer;border:1px solid #1e1e1e;margin-top:12px;min-height:40px">기록하기</button>
 </div>
@@ -1140,7 +1140,7 @@ const zones = {
 };
 
 let flickerVal = 1.0;
-let valveClicks = 0;
+let valveGauge=0,valveHoldTime=0,valveLastTap=0,valveDecayTimer=0;
 
 function p(vx,vy,vw,vh,color){ctx.fillStyle=color;ctx.fillRect(vx*S,vy*S,vw*S,vh*S)}
 
@@ -1520,9 +1520,15 @@ function showActTitle(act){
   document.getElementById('act-overlay').classList.add('open');
   // 1초 후부터 탭 스킵 가능, 5초 자동 닫힘
   setTimeout(()=>{
-    function dismiss(){closeAct();el.removeEventListener('click',dismiss);el.removeEventListener('touchend',dismiss)}
     const el=document.getElementById('act-overlay');
-    el.addEventListener('click',dismiss);el.addEventListener('touchend',dismiss);
+    function dismiss(e){
+      e.preventDefault();e.stopPropagation();
+      closeAct();
+      el.removeEventListener('click',dismiss);
+      el.removeEventListener('touchend',dismiss);
+    }
+    el.addEventListener('click',dismiss);
+    el.addEventListener('touchend',dismiss);
   },1000);
   actTimer=setTimeout(closeAct,5000);
 }
@@ -1597,7 +1603,7 @@ function restartGame(){
   G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
   G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
   Object.keys(G.flags).forEach(k=>G.flags[k]=false);
-  valveClicks=0;batteryTimer=0;sanityTimer=0;
+  valveGauge=0;valveHoldTime=0;valveLastTap=0;valveDecayTimer=0;batteryTimer=0;sanityTimer=0;
   msgHistory.length=0;msgIdx=-1;
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   hintCount=0;firstItemShown=false;lastAction=0;
@@ -1670,7 +1676,7 @@ function getHint(){
   // Act 3
   if(G.room==='r9'){
     if(!f.r9_gate&&!inv.includes('mask')) return '유독가스 때문에 밸브를 돌릴 수 없습니다. 가스마스크가 필요합니다. (r5 환기구)';
-    if(!f.r9_gate) return '밸브를 여러 번 클릭해서 수문을 여세요. (가스마스크 필요)';
+    if(!f.r9_gate) return '밸브를 빠르게 연타해서 게이지를 채우고 5초간 유지하세요! (가스마스크 필요)';
     return '보일러실로 이동하세요.';
   }
   if(G.room==='r10'){
@@ -1869,14 +1875,16 @@ function handleClick(id){
     }
   } else if(G.room==='r9'){
     if(id==='r9_valve'){
+      if(G.flags.r9_gate){setMsg('밸브는 이미 완전히 열려있다.');return}
       if(!G.inv.includes('mask')){changeSanity(-10);flash();sfxGas();setMsg('유독가스가 뿜어져 나온다! 가스마스크 없이는 밸브를 돌릴 수 없다!');return}
-      valveClicks++;
-      if(valveClicks>=3&&!G.flags.r9_gate){
-        G.flags.r9_gate=true;flash('#004400');sfxPower();
-        setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');setupNav();
-      } else if(!G.flags.r9_gate){
-        sfxValve();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 더 돌려야 한다. ('+valveClicks+'/3)');
-      } else setMsg('밸브는 이미 완전히 열려있다.');
+      valveLastTap=Date.now();
+      valveGauge=Math.min(100,valveGauge+12);
+      sfxValve();haptic(10);
+      if(valveGauge>=100){
+        setMsg('밸브가 최대로 열렸다! 이대로 5초간 유지하라! ('+Math.ceil((5000-valveHoldTime)/1000)+'초)');
+      } else {
+        setMsg('밸브를 빠르게 돌려라! ['+Math.round(valveGauge)+'%]');
+      }
     } else if(id==='r9_gate'){
       if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
       else setMsg('무거운 철문이 잠겨있다. 밸브로 수문을 열어야 한다.');
@@ -2727,6 +2735,22 @@ function drawRoom9(fv,t){
     ctx.save();ctx.globalAlpha=0.6;p(114,12,34,54,'#060810');ctx.restore();
   }
 
+  // Valve gauge bar
+  if(valveGauge>0&&!G.flags.r9_gate){
+    ctx.save();
+    ctx.globalAlpha=0.9;
+    p(40,4,80,4,'#111');
+    const gw=Math.round(78*(valveGauge/100));
+    const gc=valveGauge>=100?'#44aa44':'#aa6622';
+    p(41,5,gw,2,gc);
+    // Hold timer indicator
+    if(valveHoldTime>0){
+      const hw=Math.round(78*(valveHoldTime/5000));
+      p(41,5,hw,2,'#22cc44');
+    }
+    ctx.restore();
+  }
+
   ctx.restore();
 
   drawTouchFeedback();
@@ -2940,6 +2964,23 @@ function loop(timestamp){
     if(G.battery>=100) showBatWrap(false);
   }
 
+  // Valve gauge decay & hold check
+  if(G.room==='r9'&&!G.flags.r9_gate&&valveGauge>0){
+    const sinceLastTap=Date.now()-valveLastTap;
+    if(sinceLastTap>400){
+      valveGauge=Math.max(0,valveGauge-dt*0.02);
+      if(valveGauge<100) valveHoldTime=0;
+    }
+    if(valveGauge>=100){
+      valveHoldTime+=dt;
+      if(valveHoldTime>=5000){
+        G.flags.r9_gate=true;flash('#004400');sfxPower();haptic(50);
+        setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
+        setupNav();valveGauge=0;valveHoldTime=0;
+      }
+    }
+  } else if(G.room!=='r9'){valveGauge=0;valveHoldTime=0}
+
   ctx.clearRect(0,0,640,360);
 
   if(G.room==='r1')drawRoom1(flickerVal);
@@ -3050,6 +3091,7 @@ function startGame(){
   // Audio init happens in initAudioOnInteraction (capture phase listener).
   setupAmbientScare();
   setupDripLoop();
+  G.actsShown={1:true};
   goRoom('r1');
   showActTitle(1);
   requestAnimationFrame(loop);
