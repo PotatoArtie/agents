@@ -132,7 +132,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 </head>
 <body>
 <div class="game-wrap">
-  <div class="timer-bar" id="timer-bar">00:00<button class="rank-btn" id="rank-btn">&#127942;</button></div>
+  <div class="timer-bar"><span id="timer-text">00:00</span><button class="rank-btn" id="rank-btn">&#127942;</button></div>
   <div class="title-bar">
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
     <div class="resource-bars">
@@ -1670,7 +1670,7 @@ function restartGame(){
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   hintCount=0;firstItemShown=false;lastAction=0;
   currentBgmAct=0;currentAmbRoom='';stopBGM();
-  document.getElementById('timer-bar').textContent='00:00';
+  document.getElementById('timer-text').textContent='00:00';
   document.getElementById('san-bar').style.width='100%';
   document.getElementById('san-bar').style.background='#3366aa';
   document.getElementById('san-num').textContent='100';
@@ -3003,7 +3003,7 @@ function formatTime(ms){
 function updateTimerDisplay(){
   if(!G.startTime)return;
   const elapsed=Date.now()-G.startTime;
-  document.getElementById('timer-bar').textContent=formatTime(elapsed);
+  document.getElementById('timer-text').textContent=formatTime(elapsed);
 }
 function saveRanking(timeMs,name){
   let rankings=JSON.parse(localStorage.getItem('smp_rankings')||'[]');
