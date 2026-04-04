@@ -27,8 +27,8 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:21}
 .flash{position:absolute;inset:0;background:#680000;opacity:0;transition:opacity 0.18s;pointer-events:none;z-index:22}
 .room-label{position:absolute;top:8px;left:10px;color:#443838;font-size:clamp(7px,2vw,9px);font-family:inherit;z-index:25;pointer-events:none;text-shadow:1px 1px 2px #000}
-.nav-area{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;z-index:30}
-.nav-btn{background:rgba(4,0,0,0.88);border:1px solid #250608;color:#4a1818;font-family:inherit;font-size:clamp(9px,2.5vw,10px);padding:8px 12px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background 0.2s}
+.nav-area{display:flex;gap:6px;padding:6px 10px;background:#020002;border:1px solid #160810;border-top:none}
+.nav-btn{flex:1;background:rgba(4,0,0,0.88);border:1px solid #250608;color:#4a1818;font-family:inherit;font-size:clamp(9px,2.5vw,10px);padding:8px 12px;cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background 0.2s}
 .nav-btn:hover{background:rgba(40,0,0,0.95);color:#7a2828}
 .nav-btn:active{background:rgba(60,0,0,0.95)}
 .nav-btn.locked{opacity:0.35;color:#333}
@@ -114,8 +114,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   .inventory-bar{padding:10px;flex-wrap:wrap;justify-content:center}
   .inv-slots{flex-wrap:wrap;justify-content:center}
   .inv-slot{width:44px;height:44px}
-  .nav-area{left:0;right:0;bottom:0;display:flex;gap:4px;padding:4px}
-  .nav-btn{flex:1;min-height:48px;font-size:clamp(10px,3vw,12px)}
+  .nav-btn{flex:1;min-height:44px;font-size:clamp(10px,3vw,12px)}
   .code-modal,.dial-modal,.doc-modal{position:fixed!important;z-index:9999!important}
 }
 </style>
@@ -136,7 +135,6 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <div class="vignette"></div>
     <div class="flash" id="flash"></div>
     <div class="room-label" id="room-label">병실 101호</div>
-    <div class="nav-area" id="nav-area"></div>
     <div class="hover-tip" id="hover-tip"></div>
     <div class="code-modal" id="code-modal">
       <div class="code-title">[ LOCKED CABINET ]</div>
@@ -184,6 +182,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
       <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
     </div>
   </div>
+  <div class="nav-area" id="nav-area"></div>
   <div class="message-box">
     <div class="message-text" id="msg">눈을 떴다. 어디인지 모르겠다...</div>
     <div class="msg-nav" id="msg-nav">
