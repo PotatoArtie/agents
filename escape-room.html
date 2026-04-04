@@ -7,12 +7,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>세인트 머시 정신병원</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{background:#000;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;height:100%}
 body{display:flex;justify-content:center;align-items:center;padding-top:env(safe-area-inset-top)}
 .game-wrap{width:100%;max-width:640px;font-family:'Press Start 2P','Courier New',monospace;padding-bottom:env(safe-area-inset-bottom)}
-.title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:8px 8px 0 0}
+.timer-bar{background:#050005;border:1px solid #1a0820;border-bottom:none;padding:6px 12px;text-align:center;color:#aa4444;font-family:inherit;font-size:clamp(10px,2.5vw,13px);letter-spacing:3px;border-radius:8px 8px 0 0}
+.title-bar{background:#080610;border:1px solid #1a0820;border-bottom:none;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;border-radius:0}
 .title-text{color:#6b0000;font-size:clamp(7px,2vw,10px);letter-spacing:1px}
 .room-num{color:#3a1a1a;font-size:clamp(7px,1.8vw,9px)}
 .resource-bars{display:flex;gap:8px;align-items:center}
@@ -73,6 +76,10 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .act-overlay.open{display:flex}
 .act-title{color:#6b0000;font-family:inherit;font-size:clamp(12px,3.5vw,16px);margin-bottom:16px;animation:blink 1.2s infinite}
 .act-desc{color:#555;font-family:inherit;font-size:clamp(8px,2.2vw,10px);line-height:2.2}
+.name-input-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.name-input-overlay.open{display:flex}
+.name-input-overlay input{background:#0a0a0a;border:1px solid #333;color:#cc9944;font-family:inherit;font-size:clamp(14px,4vw,20px);padding:10px 16px;text-align:center;width:min(250px,70vw);outline:none;letter-spacing:2px}
+.name-input-overlay input:focus{border-color:#cc9944}
 .win-screen{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 .win-screen.open{display:flex}
 .win-title{color:#288828;font-family:inherit;font-size:clamp(10px,3vw,14px);animation:blink 1.2s infinite;margin-bottom:24px}
@@ -120,6 +127,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 </head>
 <body>
 <div class="game-wrap">
+  <div class="timer-bar" id="timer-bar">00:00</div>
   <div class="title-bar">
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
     <div class="resource-bars">
@@ -164,22 +172,6 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
         <button class="btn-ok" id="dial-ok" style="font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;border:1px solid #1e1e1e;min-height:34px">확인</button>
       </div>
     </div>
-    <div class="tutorial" id="tutorial">
-      <div class="tut-icon" id="tut-icon"></div>
-      <div class="tut-text" id="tut-text"></div>
-      <div class="tut-step" id="tut-step"></div>
-    </div>
-    <div class="act-overlay" id="act-overlay">
-      <div class="act-title" id="act-title"></div>
-      <div class="act-desc" id="act-desc"></div>
-      <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
-    </div>
-    <div class="win-screen" id="win-screen">
-      <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
-      <div class="win-text" id="win-text"></div>
-      <div class="win-end" id="win-end">-- THE END --</div>
-      <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
-    </div>
   </div>
   <div class="nav-area" id="nav-area"></div>
   <div class="message-box">
@@ -210,6 +202,29 @@ const canvas = document.getElementById('gc');
 const ctx = canvas.getContext('2d');
 const sceneWrapper = document.getElementById('scene-wrapper');
 const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
+
+// ===== FIREBASE =====
+firebase.initializeApp({
+  apiKey:"AIzaSyBPyhcem-C8eNCJDTbjcc62_irH1YJ1q_Q",
+  authDomain:"escape-rush-d2861.firebaseapp.com",
+  databaseURL:"https://escape-rush-d2861-default-rtdb.firebaseio.com",
+  projectId:"escape-rush-d2861",
+  storageBucket:"escape-rush-d2861.firebasestorage.app",
+  messagingSenderId:"185115436499",
+  appId:"1:185115436499:web:a5039efd1af6fa045dbb26"
+});
+const fbDb=firebase.database();
+
+function saveRankingOnline(timeMs,name){
+  fbDb.ref('rankings').push({time:timeMs,name:name||'???',date:new Date().toLocaleDateString('ko-KR'),timestamp:Date.now()});
+}
+function loadRankingsOnline(callback){
+  fbDb.ref('rankings').orderByChild('time').limitToFirst(10).once('value',snap=>{
+    const list=[];
+    snap.forEach(child=>list.push(child.val()));
+    callback(list);
+  });
+}
 
 // ===== DEBUG LOG =====
 const _dbgPanel = document.getElementById('dbg-panel');
@@ -968,6 +983,7 @@ document.addEventListener('touchstart', initAudioOnInteraction);
 const G = {
   room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
   displayScale:1.0, touchFeedback:null, act:1, actsShown:{},
+  startTime:0, clearTime:0,
   sanity:100, battery:100, docsRead:[], modalOpen:null, ended:false,
   dialVal:0, dialSeq:[], dialTarget:[],
   flags:{bed:false,wall:false,lock:false,nurse:false,
@@ -1492,8 +1508,31 @@ function showActTitle(act){
 // ===== ENDING SYSTEM =====
 function showEnding(){
   G.ended=true;
+  G.clearTime=Date.now()-G.startTime;
+  const isBadEnd=G.sanity<=0;
+  if(!isBadEnd){
+    // 탈출 성공 — 이름 입력 먼저
+    const overlay=document.getElementById('name-overlay');
+    const input=document.getElementById('name-input');
+    input.value='';
+    overlay.classList.add('open');
+    input.focus();
+    function submitName(){
+      G.playerName=input.value.trim()||'???';
+      overlay.classList.remove('open');
+      showEndScreen(isBadEnd);
+    }
+    document.getElementById('name-submit').onclick=submitName;
+    input.onkeydown=function(e){if(e.key==='Enter')submitName()};
+  } else {
+    G.playerName='';
+    showEndScreen(isBadEnd);
+  }
+}
+
+function showEndScreen(isBadEnd){
   const ws=document.getElementById('win-screen');
-  if(G.sanity<=0){
+  if(isBadEnd){
     document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
     document.getElementById('win-title').style.color='#aa2222';
     document.getElementById('win-text').innerHTML='정신이 완전히 무너졌다.<br><br>당신은 세인트 머시 정신병원의<br>새로운 환자가 되었다.';
@@ -1501,22 +1540,39 @@ function showEnding(){
   } else if(G.docsRead.length<3){
     document.getElementById('win-title').innerHTML='&#9654; NORMAL END &#9664;';
     document.getElementById('win-title').style.color='#888828';
-    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>세인트 머시 정신병원에서 탈출.<br><br>살아서 나왔지만...<br>이 병원의 진실은 여전히 묻혀있다.<br><br>당신은 아무것도 증명할 수 없다.';
+    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>'+G.playerName+'(이)가 세인트 머시 정신병원에서 탈출했다.<br><br>살아서 나왔지만...<br>이 병원의 진실은 여전히 묻혀있다.<br><br>당신은 아무것도 증명할 수 없다.';
     document.getElementById('win-end').textContent='-- 탈출 --';
   } else {
     document.getElementById('win-title').innerHTML='&#9654; TRUE END &#9664;';
     document.getElementById('win-title').style.color='#288828';
-    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>세인트 머시 정신병원에서 탈출.<br><br>손에는 20년간 묻혀있던<br>진실이 담긴 문서들.<br><br>프로젝트 제네시스의 인체실험,<br>사라진 환자들, 그리고 원장의 범죄.<br><br>이 병원의 비밀을 세상에 알릴 시간이다.';
+    document.getElementById('win-text').innerHTML='새벽 4시 37분.<br>'+G.playerName+'(이)가 세인트 머시 정신병원에서 탈출했다.<br><br>손에는 20년간 묻혀있던<br>진실이 담긴 문서들.<br><br>프로젝트 제네시스의 인체실험,<br>사라진 환자들, 그리고 원장의 범죄.<br><br>이 병원의 비밀을 세상에 알릴 시간이다.';
     document.getElementById('win-end').textContent='-- 진실 폭로 --';
   }
+  // 클리어 타임 표시 + 랭킹 (Bad End 제외)
+  if(!isBadEnd){
+    saveRanking(G.clearTime,G.playerName);
+    saveRankingOnline(G.clearTime,G.playerName);
+  }
+  // 온라인 랭킹 로드 후 표시
+  loadRankingsOnline(function(onlineRankings){
+    let rankingHTML='';
+    if(!isBadEnd){
+      rankingHTML='<div style="color:#cc9944;font-size:clamp(10px,2.5vw,12px);font-family:inherit;margin-top:12px">\u23F1 '+formatTime(G.clearTime)+'</div>';
+    }
+    rankingHTML+=buildRankingHTML(onlineRankings,isBadEnd?null:G.clearTime);
+    document.getElementById('win-end').insertAdjacentHTML('afterend','<div id="ranking-section">'+rankingHTML+'</div>');
+  });
   sfxWin();
   ws.classList.add('open');
 }
 
 function restartGame(){
   document.getElementById('win-screen').classList.remove('open');
+  const rs=document.getElementById('ranking-section');if(rs)rs.remove();
+  document.getElementById('name-overlay').classList.remove('open');
   G.room='r1';G.inv=[];G.sel=null;G.t=0;G.pad=false;G.code='';
-  G.act=1;G.actsShown={};G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
+  G.act=1;G.actsShown={};G.startTime=Date.now();G.clearTime=0;
+  G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
   G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
   Object.keys(G.flags).forEach(k=>G.flags[k]=false);
   valveClicks=0;batteryTimer=0;sanityTimer=0;
@@ -1524,6 +1580,7 @@ function restartGame(){
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   hintCount=0;firstItemShown=false;lastAction=0;
   currentBgmAct=0;currentAmbRoom='';stopBGM();
+  document.getElementById('timer-bar').textContent='00:00';
   document.getElementById('san-bar').style.width='100%';
   document.getElementById('san-bar').style.background='#3366aa';
   document.getElementById('san-num').textContent='100';
@@ -1635,7 +1692,7 @@ goRoom=function(id){
   origGoRoom(id);
   const zoneCount=(zones[id]||[]).length;
   const label=document.getElementById('room-label');
-  if(zoneCount>0) label.textContent=ROOM_LABELS[id]+' ('+zoneCount+'개 조사 가능)';
+  if(zoneCount>0) label.textContent=ROOM_LABELS[id]+' \uD83D\uDD0D\u00D7'+zoneCount;
 };
 
 // ===== SNACK HANDLER =====
@@ -2787,6 +2844,45 @@ function resetIdle(){lastAction=G.t;document.getElementById('hint-btn').classLis
 canvas.addEventListener('click',resetIdle);
 canvas.addEventListener('touchstart',resetIdle);
 
+// ===== TIMER & RANKING =====
+function formatTime(ms){
+  const s=Math.floor(ms/1000);
+  const m=Math.floor(s/60);
+  const sec=s%60;
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function updateTimerDisplay(){
+  if(!G.startTime)return;
+  const elapsed=Date.now()-G.startTime;
+  document.getElementById('timer-bar').textContent=formatTime(elapsed);
+}
+function saveRanking(timeMs,name){
+  let rankings=JSON.parse(localStorage.getItem('smp_rankings')||'[]');
+  const entry={time:timeMs,name:name||'???',date:new Date().toLocaleDateString('ko-KR')};
+  rankings.push(entry);
+  rankings.sort((a,b)=>a.time-b.time);
+  rankings=rankings.slice(0,10);
+  localStorage.setItem('smp_rankings',JSON.stringify(rankings));
+  return rankings;
+}
+function getRankings(){
+  return JSON.parse(localStorage.getItem('smp_rankings')||'[]');
+}
+function buildRankingHTML(rankings,currentTime){
+  let html='<div style="margin-top:16px;border-top:1px solid #2a2a2a;padding-top:12px">';
+  html+='<div style="color:#cc9944;font-size:clamp(9px,2.5vw,11px);margin-bottom:10px;font-family:inherit">\uD83C\uDFC6 RANKING</div>';
+  if(rankings.length===0){html+='<div style="color:#444;font-size:9px;font-family:inherit">기록 없음</div>'}
+  rankings.forEach((r,i)=>{
+    const isCurrent=currentTime&&r.time===currentTime;
+    const color=isCurrent?'#cc9944':'#555';
+    const prefix=isCurrent?'\u25B6 ':'  ';
+    const name=r.name||'???';
+    html+='<div style="color:'+color+';font-size:clamp(8px,2vw,10px);font-family:inherit;line-height:2.2">'+prefix+(i+1)+'. '+name+' '+formatTime(r.time)+' \u2014 '+r.date+'</div>';
+  });
+  html+='</div>';
+  return html;
+}
+
 // ===== MAIN LOOP =====
 let lastT=0;
 let batteryTimer=0;
@@ -2795,6 +2891,9 @@ function loop(timestamp){
   if(G.ended)return;
   const dt=timestamp-lastT;lastT=timestamp;G.t+=dt;
   updateFlicker();
+
+  // Update timer display
+  updateTimerDisplay();
 
   // Pulse hint button after 30s idle
   if(G.t-lastAction>30000) document.getElementById('hint-btn').classList.add('pulse');
@@ -2927,6 +3026,7 @@ function startGame(){
   // Do NOT call ensureAudio/startBGM here — startGame may be called
   // during page load (tutorial skip) without user gesture.
   // Audio init happens in initAudioOnInteraction (capture phase listener).
+  G.startTime=Date.now();
   setupAmbientScare();
   setupDripLoop();
   goRoom('r1');
@@ -2941,5 +3041,26 @@ function init(){
 }
 init();
 </script>
+<div class="tutorial" id="tutorial">
+  <div class="tut-icon" id="tut-icon"></div>
+  <div class="tut-text" id="tut-text"></div>
+  <div class="tut-step" id="tut-step"></div>
+</div>
+<div class="act-overlay" id="act-overlay">
+  <div class="act-title" id="act-title"></div>
+  <div class="act-desc" id="act-desc"></div>
+  <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
+</div>
+<div class="name-input-overlay" id="name-overlay">
+  <div style="color:#888;font-size:clamp(9px,2.5vw,11px);font-family:inherit;line-height:2.4;margin-bottom:20px">사실 나의 이름은...</div>
+  <input type="text" id="name-input" maxlength="10" placeholder="이름 입력" autocomplete="off">
+  <button class="btn-ok" id="name-submit" style="font-family:inherit;font-size:clamp(9px,2.5vw,11px);padding:10px 24px;cursor:pointer;border:1px solid #1e1e1e;margin-top:12px;min-height:40px">기록하기</button>
+</div>
+<div class="win-screen" id="win-screen">
+  <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
+  <div class="win-text" id="win-text"></div>
+  <div class="win-end" id="win-end">-- THE END --</div>
+  <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
+</div>
 </body>
 </html>
