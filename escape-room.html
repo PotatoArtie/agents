@@ -367,6 +367,244 @@ function sfxDrip() {
   o.start(); o.stop(t + 0.1);
 }
 
+// --- NEW SOUND EFFECTS ---
+
+function sfxPaper() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Rustling paper noise
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.3, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const p = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * 0.06 * Math.sin(p * Math.PI) * (1 + Math.sin(i * 0.1) * 0.3);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'highpass'; flt.frequency.value = 2000; flt.Q.value = 0.5;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.12, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.3);
+  src.start();
+}
+
+function sfxHeartbeat() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  for (let i = 0; i < 2; i++) {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    const st = t + i * 0.18;
+    o.frequency.setValueAtTime(50, st);
+    o.frequency.linearRampToValueAtTime(35, st + 0.1);
+    g.gain.setValueAtTime(0.18, st);
+    g.gain.linearRampToValueAtTime(0, st + 0.15);
+    o.start(st); o.stop(st + 0.15);
+  }
+}
+
+function sfxRelief() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Soft ascending chime
+  [440, 554, 659].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = f;
+    const st = t + i * 0.12;
+    g.gain.setValueAtTime(0.06, st);
+    g.gain.linearRampToValueAtTime(0, st + 0.25);
+    o.start(st); o.stop(st + 0.25);
+  });
+}
+
+function sfxValve() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Metal grinding
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.5, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const p = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * 0.08 * Math.sin(p * Math.PI) * Math.sin(i * 0.005 + Math.sin(i * 0.001) * 3);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'bandpass'; flt.frequency.value = 600; flt.Q.value = 5;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.15, t); g.gain.linearRampToValueAtTime(0, t + 0.5);
+  src.start();
+}
+
+function sfxGas() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Hissing gas
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.6, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const p = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * 0.1 * (1 - p * 0.7);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  flt.type = 'highpass'; flt.frequency.value = 3000;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.1, t); g.gain.linearRampToValueAtTime(0, t + 0.6);
+  src.start();
+}
+
+function sfxAcid() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Sizzling/bubbling
+  for (let i = 0; i < 8; i++) {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    const st = t + i * 0.08 + Math.random() * 0.04;
+    o.frequency.setValueAtTime(1800 + Math.random() * 2000, st);
+    o.frequency.linearRampToValueAtTime(600 + Math.random() * 400, st + 0.06);
+    g.gain.setValueAtTime(0.03, st);
+    g.gain.linearRampToValueAtTime(0, st + 0.07);
+    o.start(st); o.stop(st + 0.07);
+  }
+}
+
+function sfxSplash() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Water splash
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.25, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const p = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * 0.12 * Math.pow(1 - p, 2);
+  }
+  const src = audioCtx.createBufferSource();
+  const flt = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  src.buffer = buf; flt.type = 'lowpass'; flt.frequency.value = 1200;
+  src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.1, t); g.gain.linearRampToValueAtTime(0, t + 0.25);
+  src.start();
+}
+
+function sfxHint() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Soft bell ding
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine'; o.frequency.value = 880;
+  g.gain.setValueAtTime(0.08, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.3);
+  o.start(); o.stop(t + 0.3);
+}
+
+function sfxActTransition() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Deep impact drum
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(80, t);
+  o.frequency.linearRampToValueAtTime(30, t + 0.5);
+  g.gain.setValueAtTime(0.25, t);
+  g.gain.linearRampToValueAtTime(0, t + 0.8);
+  o.start(); o.stop(t + 0.8);
+  // Reverb tail
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'triangle'; o2.frequency.value = 55;
+  g2.gain.setValueAtTime(0.06, t + 0.1);
+  g2.gain.linearRampToValueAtTime(0, t + 1.5);
+  o2.start(t + 0.1); o2.stop(t + 1.5);
+}
+
+function sfxDread() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Low rumble dread
+  const o1 = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  o1.type = 'sawtooth'; o1.frequency.value = 40;
+  o2.type = 'sawtooth'; o2.frequency.value = 43;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.08, t + 0.3);
+  g.gain.linearRampToValueAtTime(0.04, t + 0.8);
+  g.gain.linearRampToValueAtTime(0, t + 1.2);
+  o1.start(); o2.start(); o1.stop(t + 1.2); o2.stop(t + 1.2);
+}
+
+function sfxCharge() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Electronic charge-up
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(200, t);
+  o.frequency.linearRampToValueAtTime(800, t + 0.3);
+  o.frequency.setValueAtTime(800, t + 0.3);
+  g.gain.setValueAtTime(0.08, t);
+  g.gain.linearRampToValueAtTime(0.12, t + 0.25);
+  g.gain.linearRampToValueAtTime(0, t + 0.4);
+  o.start(); o.stop(t + 0.4);
+  // Confirmation beep
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'sine'; o2.frequency.value = 1000;
+  g2.gain.setValueAtTime(0.06, t + 0.35);
+  g2.gain.linearRampToValueAtTime(0, t + 0.5);
+  o2.start(t + 0.35); o2.stop(t + 0.5);
+}
+
+function sfxBadEnd() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Collapse/doom sound
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(200, t);
+  o.frequency.linearRampToValueAtTime(20, t + 1.5);
+  g.gain.setValueAtTime(0.15, t);
+  g.gain.linearRampToValueAtTime(0.1, t + 0.5);
+  g.gain.linearRampToValueAtTime(0, t + 1.5);
+  o.start(); o.stop(t + 1.5);
+  // Dissonant overlay
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.type = 'sine';
+  o2.frequency.setValueAtTime(180, t);
+  o2.frequency.linearRampToValueAtTime(60, t + 1.2);
+  g2.gain.setValueAtTime(0.08, t);
+  g2.gain.linearRampToValueAtTime(0, t + 1.2);
+  o2.start(); o2.stop(t + 1.2);
+}
+
 // ===== AMBIENT BACKGROUND MUSIC =====
 let bgmNodes = [];
 function startBGM() {
@@ -589,6 +827,8 @@ function changeSanity(amt){
   document.getElementById('san-num').textContent=G.sanity;
   if(G.sanity<=20) bar.style.background='#aa3333';
   else bar.style.background='#3366aa';
+  if(amt<=-8) sfxHeartbeat();
+  else if(amt<=-3) sfxDread();
   if(G.sanity<=0&&!G.ended) gameOverSanity();
 }
 
@@ -602,7 +842,7 @@ function changeBattery(amt){
 }
 
 function gameOverSanity(){
-  G.ended=true;
+  G.ended=true;sfxBadEnd();
   const ws=document.getElementById('win-screen');
   document.getElementById('win-title').innerHTML='&#9760; BAD END &#9760;';
   document.getElementById('win-title').style.color='#aa2222';
@@ -746,7 +986,8 @@ function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
 function openDoc(id){
   if(!DOCS[id])return;
   G.modalOpen='doc';
-  if(!G.docsRead.includes(id)){G.docsRead.push(id);changeSanity(8)}
+  if(!G.docsRead.includes(id)){G.docsRead.push(id);changeSanity(8);sfxRelief()}
+  sfxPaper();
   document.getElementById('doc-title').textContent=DOCS[id].title;
   document.getElementById('doc-body').textContent=DOCS[id].body;
   document.getElementById('doc-modal').classList.add('open');
@@ -815,7 +1056,7 @@ function closeAct(){
   G.modalOpen=null;
 }
 function showActTitle(act){
-  G.modalOpen='act';
+  G.modalOpen='act';sfxActTransition();
   const titles={1:'Act 1: 감금',2:'Act 2: 진실',3:'Act 3: 탈출'};
   const descs={1:'세인트 머시 정신병원 1층',2:'지하에 숨겨진 비밀',3:'최후의 탈출'};
   document.getElementById('act-title').textContent=titles[act]||'';
@@ -950,7 +1191,7 @@ function getHint(){
 let hintCount=0;
 document.getElementById('hint-btn').addEventListener('click',()=>{
   hintCount++;
-  sfxClick();
+  sfxHint();
   setMsg('💡 힌트: '+getHint(),'hint');
 });
 
@@ -1061,7 +1302,7 @@ function handleClick(id){
       setMsg('난간 너머 아래를 내려다본다. 끝이 보이지 않는 어둠... 현기증이 난다.');
       } else setMsg('다시 내려다볼 용기가 없다.');
     } else if(id==='r5_shelf'){
-      if(!G.flags.r5_battery){G.flags.r5_battery=true;changeBattery(50);flash('#004400');sfxPickup();setMsg('선반에서 건전지를 발견했다! 배터리가 충전되었다. [+50 배터리]','item')}
+      if(!G.flags.r5_battery){G.flags.r5_battery=true;changeBattery(50);flash('#004400');sfxCharge();setMsg('선반에서 건전지를 발견했다! 배터리가 충전되었다. [+50 배터리]','item')}
       else setMsg('선반에는 더 이상 아무것도 없다.');
     }
   } else if(G.room==='r6'){
@@ -1097,7 +1338,7 @@ function handleClick(id){
       else setMsg('더 이상 찾을 것이 없는 서류 더미다.');
     } else if(id==='r8_safe'){
       if(!G.flags.r8_safe2){
-        if(G.sel==='chemical'&&G.inv.includes('formula')){G.flags.r8_safe2=true;removeItem('chemical');removeItem('formula');flash('#004400');sfxPower();G.sel=null;openDoc('doc6');setMsg('조합 공식대로 화학약품을 조합해 금고를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
+        if(G.sel==='chemical'&&G.inv.includes('formula')){G.flags.r8_safe2=true;removeItem('chemical');removeItem('formula');flash('#004400');sfxAcid();G.sel=null;openDoc('doc6');setMsg('조합 공식대로 화학약품을 조합해 금고를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
         else if(G.sel==='chemical'&&!G.inv.includes('formula')){setMsg('화학약품만으로는 안 된다. 올바른 조합 공식이 필요하다.')}
         else{
           if(G.inv.includes('chemical')&&G.inv.includes('formula')) setMsg('금고가 잠겨있다. 화학약품을 선택해서 조합 공식대로 부식시키자.');
@@ -1112,19 +1353,19 @@ function handleClick(id){
     }
   } else if(G.room==='r9'){
     if(id==='r9_valve'){
-      if(!G.inv.includes('mask')){changeSanity(-10);flash();sfxScare();setMsg('유독가스가 뿜어져 나온다! 가스마스크 없이는 밸브를 돌릴 수 없다!');return}
+      if(!G.inv.includes('mask')){changeSanity(-10);flash();sfxGas();setMsg('유독가스가 뿜어져 나온다! 가스마스크 없이는 밸브를 돌릴 수 없다!');return}
       valveClicks++;
       if(valveClicks>=3&&!G.flags.r9_gate){
         G.flags.r9_gate=true;flash('#004400');sfxPower();
         setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
       } else if(!G.flags.r9_gate){
-        sfxClick();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 더 돌려야 한다. ('+valveClicks+'/3)');
+        sfxValve();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 더 돌려야 한다. ('+valveClicks+'/3)');
       } else setMsg('밸브는 이미 완전히 열려있다.');
     } else if(id==='r9_gate'){
       if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
       else setMsg('무거운 철문이 잠겨있다. 밸브로 수문을 열어야 한다.');
     } else if(id==='r9_water'){
-      if(!G._waterCd){G._waterCd=true;setTimeout(()=>G._waterCd=false,10000);changeSanity(-2);
+      if(!G._waterCd){G._waterCd=true;setTimeout(()=>G._waterCd=false,10000);sfxSplash();changeSanity(-2);
       setMsg('탁한 물 속에서 뭔가 스쳐간다... 무엇이었는지는 알고 싶지 않다.');
       } else setMsg('더러운 물이 흐르고 있다...');
     }
