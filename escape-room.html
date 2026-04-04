@@ -911,7 +911,7 @@ document.addEventListener('touchstart', initAudioOnInteraction);
 // ===== GAME STATE =====
 const G = {
   room:'r1', inv:[], sel:null, t:0, pad:false, code:'',
-  displayScale:1.0, touchFeedback:null, act:1,
+  displayScale:1.0, touchFeedback:null, act:1, actsShown:{},
   sanity:100, battery:100, docsRead:[], modalOpen:null, ended:false,
   dialVal:0, dialSeq:[], dialTarget:[],
   flags:{bed:false,wall:false,lock:false,nurse:false,
@@ -1360,7 +1360,7 @@ function showEnding(){
 function restartGame(){
   document.getElementById('win-screen').classList.remove('open');
   G.room='r1';G.inv=[];G.sel=null;G.t=0;G.pad=false;G.code='';
-  G.act=1;G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
+  G.act=1;G.actsShown={};G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
   G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
   Object.keys(G.flags).forEach(k=>G.flags[k]=false);
   valveClicks=0;batteryTimer=0;
@@ -1736,7 +1736,7 @@ function goRoom(id){
   const newAct=ROOM_ACTS[id];
   if(newAct!==G.act){
     G.act=newAct;
-    showActTitle(newAct);
+    if(!G.actsShown[newAct]){G.actsShown[newAct]=true;showActTitle(newAct)}
   }
   G.room=id;G.pad=false;G.sel=null;
   closeCodePad();closeDoc();closeDial();sfxDoor();
