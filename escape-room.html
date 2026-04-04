@@ -416,7 +416,7 @@ const G = {
     r4_monitor:false,r4_safe:false,r4_powered:false,
     r5_grate:false,
     r6_doc2:false,r6_corpse:false,
-    r7_table:false,r7_formula:false,r7_mix:false,
+    r7_table:false,r7_formula:false,
     r8_shelf:false,r8_safe2:false,
     r9_gate:false,
     r10_boiler:false,r10_steam:false,
@@ -849,7 +849,9 @@ function restartGame(){
   G.act=1;G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
   G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
   Object.keys(G.flags).forEach(k=>G.flags[k]=false);
-  valveClicks=0;
+  valveClicks=0;batteryTimer=0;
+  msgHistory.length=0;msgIdx=-1;
+  G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   document.getElementById('san-bar').style.width='100%';
   document.getElementById('san-bar').style.background='#3366aa';
   document.getElementById('san-num').textContent='100';
@@ -890,9 +892,11 @@ function handleClick(id){
       if(!G.inv.includes('note')){setMsg('비밀번호 잠금장치가 있다. 번호를 어딘가에서 찾아야 할 것 같다...');return}
       openCodePad();
     } else if(id==='shadow'){
+      if(!G._shadowCd){G._shadowCd=true;setTimeout(()=>G._shadowCd=false,10000);
       flash();sfxScare();changeSanity(-5);
       setMsg('복도 끝이 어둠에 잠겨있다... 뭔가가 움직인 것 같기도 하다.');
       setTimeout(()=>setMsg('쿵! 복도 어딘가에서 소리가 났다. 빨리 탈출해야 한다.'),700);
+      } else setMsg('... 복도 끝은 여전히 어둡다.');
     }
   } else if(G.room==='r3'){
     if(id==='r3_desk'){
@@ -940,8 +944,9 @@ function handleClick(id){
         }
       } else setMsg('이미 뜯어낸 환기구다. 텅 비어있다.');
     } else if(id==='r5_rail'){
-      changeSanity(-3);
+      if(!G._railCd){G._railCd=true;setTimeout(()=>G._railCd=false,10000);changeSanity(-3);
       setMsg('난간 너머 아래를 내려다본다. 끝이 보이지 않는 어둠... 현기증이 난다.');
+      } else setMsg('다시 내려다볼 용기가 없다.');
     }
   } else if(G.room==='r6'){
     if(id==='r6_corpse'){
@@ -985,9 +990,9 @@ function handleClick(id){
         }
       } else setMsg('이미 열린 금고다.');
     } else if(id==='r8_desk'){
-      changeSanity(-8);
+      if(!G._r8deskRead){G._r8deskRead=true;changeSanity(-8);setMsg('책상 위에 원장의 비밀 서신이 있다... 소름이 끼친다.')}
+      else setMsg('이미 읽은 서신이다.');
       openDoc('doc3');
-      setMsg('책상 위에 원장의 비밀 서신이 있다... 소름이 끼친다.');
     }
   } else if(G.room==='r9'){
     if(id==='r9_valve'){
@@ -1003,8 +1008,9 @@ function handleClick(id){
       if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
       else setMsg('무거운 철문이 잠겨있다. 밸브로 수문을 열어야 한다.');
     } else if(id==='r9_water'){
-      changeSanity(-2);
+      if(!G._waterCd){G._waterCd=true;setTimeout(()=>G._waterCd=false,10000);changeSanity(-2);
       setMsg('탁한 물 속에서 뭔가 스쳐간다... 무엇이었는지는 알고 싶지 않다.');
+      } else setMsg('더러운 물이 흐르고 있다...');
     }
   } else if(G.room==='r10'){
     if(id==='r10_boiler'){
@@ -1997,8 +2003,10 @@ function loop(timestamp){
 }
 
 // ===== AMBIENT SCARE =====
+let scareInterval=null,dripInterval=null;
 function setupAmbientScare(){
-  setInterval(()=>{
+  if(scareInterval)clearInterval(scareInterval);
+  scareInterval=setInterval(()=>{
     if(G.modalOpen)return;
     if(Math.random()<0.65){
       let scares;
@@ -2038,7 +2046,8 @@ function setupAmbientScare(){
 
 // Water drip sound loop
 function setupDripLoop() {
-  setInterval(() => {
+  if(dripInterval)clearInterval(dripInterval);
+  dripInterval=setInterval(() => {
     if ((G.room === 'r6' || G.room === 'r9') && audioCtx) sfxDrip();
   }, 2800);
 }
