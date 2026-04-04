@@ -201,22 +201,31 @@ function ensureAudio() {
   }
 }
 
-// iOS Safari unlock: must play a sound synchronously in a user gesture
+// iOS Safari unlock: must play actual audio synchronously in user gesture
+let audioUnlocked = false;
 function unlockAudio() {
-  ensureAudio();
-  if (!audioCtx) return;
-  // Play a silent buffer to unlock the audio pipeline
-  const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
-  src.connect(audioCtx.destination);
-  src.start(0);
-  // Also create+start+stop an oscillator as extra unlock
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  g.gain.value = 0;
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + 0.001);
+  if (audioUnlocked && audioCtx && audioCtx.state === 'running') return;
+  // Create context in gesture handler
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Resume must happen in gesture
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(()=>{});
+  }
+  // Play a real (but near-inaudible) tone — iOS requires actual output
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.value = 1;
+    g.gain.value = 0.001; // near-silent but not zero
+    o.start();
+    o.stop(audioCtx.currentTime + 0.05);
+    audioUnlocked = true;
+  } catch(e){}
 }
 
 function sfxPickup() {
@@ -858,17 +867,19 @@ function updateRoomAmbience(room) {
   // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
+// Audio init: runs on ANY first user interaction (even through tutorial overlay)
 function initAudioOnInteraction() {
   unlockAudio();
   startBGM(G.act || 1);
   removeAudioListeners();
 }
 function removeAudioListeners() {
-  ['click','touchstart','touchend','keydown'].forEach(e =>
-    document.removeEventListener(e, initAudioOnInteraction));
+  ['click','touchstart','touchend'].forEach(e =>
+    document.removeEventListener(e, initAudioOnInteraction, true));
 }
-['click','touchstart','touchend','keydown'].forEach(e =>
-  document.addEventListener(e, initAudioOnInteraction, {once:false}));
+// Use CAPTURE phase so it fires before tutorial's preventDefault
+['click','touchstart','touchend'].forEach(e =>
+  document.addEventListener(e, initAudioOnInteraction, true));
 
 // ===== GAME STATE =====
 const G = {
