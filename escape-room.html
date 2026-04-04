@@ -195,12 +195,44 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
     <span class="inv-sel-name" id="inv-sel-name"></span>
     <button class="hint-btn" id="hint-btn">?</button>
   </div>
+  <div style="text-align:center;margin-top:4px">
+    <button id="dbg-toggle" style="background:#111;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;padding:4px 12px;cursor:pointer">DEV</button>
+  </div>
+  <pre id="dbg-panel" style="display:none;background:#0a0a0a;border:1px solid #333;color:#0f0;font-family:monospace;font-size:10px;padding:8px;margin:4px auto;max-width:640px;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></pre>
 </div>
 <script>
 const canvas = document.getElementById('gc');
 const ctx = canvas.getContext('2d');
 const sceneWrapper = document.getElementById('scene-wrapper');
 const VIRTUAL_W = 160, VIRTUAL_H = 90, S = 4;
+
+// ===== DEBUG LOG =====
+const _dbgPanel = document.getElementById('dbg-panel');
+const _dbgToggle = document.getElementById('dbg-toggle');
+let _dbgOn = false;
+_dbgToggle.addEventListener('click', () => {
+  _dbgOn = !_dbgOn;
+  _dbgPanel.style.display = _dbgOn ? 'block' : 'none';
+  _dbgToggle.style.color = _dbgOn ? '#0f0' : '#555';
+  if (_dbgOn) dbg('=== Debug panel opened ===');
+  if (_dbgOn && audioCtx) {
+    dbg('audioCtx.state = ' + audioCtx.state);
+    dbg('bgmStarted = ' + bgmStarted);
+    dbg('bgmNodes.length = ' + (typeof bgmNodes !== 'undefined' ? bgmNodes.length : 'N/A'));
+    dbg('audioCtx.destination.numberOfInputs = ' + audioCtx.destination.numberOfInputs);
+    dbg('audioCtx.sampleRate = ' + audioCtx.sampleRate);
+    dbg('audioCtx.baseLatency = ' + (audioCtx.baseLatency || 'N/A'));
+  } else if (_dbgOn) {
+    dbg('audioCtx = null (not created yet)');
+  }
+});
+function dbg(msg) {
+  if (!_dbgPanel) return;
+  const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',fractionalSecondDigits:3});
+  _dbgPanel.textContent += '[' + ts + '] ' + msg + '\n';
+  _dbgPanel.scrollTop = _dbgPanel.scrollHeight;
+  console.log('[DBG]', msg);
+}
 
 // ===== WEB AUDIO: SOUND ENGINE =====
 let audioCtx = null;
@@ -209,14 +241,32 @@ let bgmStarted = false;
 function ensureAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    dbg('AudioContext created, state=' + audioCtx.state + ', sampleRate=' + audioCtx.sampleRate);
+    // Monitor state changes
+    audioCtx.addEventListener('statechange', () => {
+      dbg('audioCtx.statechange -> ' + audioCtx.state);
+    });
   }
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(()=>{});
+    dbg('audioCtx suspended, calling resume()');
+    audioCtx.resume().then(() => {
+      dbg('resume() resolved, state=' + audioCtx.state);
+    }).catch(e => {
+      dbg('resume() REJECTED: ' + e);
+    });
   }
 }
 
+let _sfxCallCount = 0;
+function sfxDbg(name) {
+  _sfxCallCount++;
+  if (_sfxCallCount <= 5) {
+    dbg('SFX: ' + name + '() called, audioCtx.state=' + (audioCtx ? audioCtx.state : 'null'));
+  }
+}
 
 function sfxPickup() {
+  sfxDbg('sfxPickup');
   ensureAudio();
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
@@ -231,6 +281,7 @@ function sfxPickup() {
 }
 
 function sfxClick() {
+  sfxDbg('sfxClick');
   ensureAudio();
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
@@ -683,19 +734,26 @@ function makeDrone(master, freq, type, detune, filterFreq, vol) {
 }
 
 function startBGM(act) {
+  dbg('startBGM(' + act + ') called, bgmStarted=' + bgmStarted + ', currentBgmAct=' + currentBgmAct);
   ensureAudio();
-  if (!audioCtx) return;
+  if (!audioCtx) { dbg('startBGM: audioCtx is null, aborting'); return; }
+  dbg('startBGM: audioCtx.state=' + audioCtx.state);
   act = act || 1;
-  if (bgmStarted && currentBgmAct === act) return;
-  if (bgmStarted) stopBGM();
+  if (bgmStarted && currentBgmAct === act) { dbg('startBGM: already playing act ' + act + ', skip'); return; }
+  if (bgmStarted) { dbg('startBGM: stopping previous BGM'); stopBGM(); }
   currentBgmAct = act;
   bgmStarted = true;
 
-  bgmMaster = audioCtx.createGain();
-  bgmMaster.gain.value = 0.035;
-  bgmMaster.connect(audioCtx.destination);
-  bgmNodes.push(bgmMaster);
-  buildBGMForAct(act);
+  try {
+    bgmMaster = audioCtx.createGain();
+    bgmMaster.gain.value = 0.035;
+    bgmMaster.connect(audioCtx.destination);
+    bgmNodes.push(bgmMaster);
+    buildBGMForAct(act);
+    dbg('startBGM: SUCCESS, bgmNodes.length=' + bgmNodes.length);
+  } catch(e) {
+    dbg('startBGM: ERROR: ' + e.message);
+  }
 }
 
 function buildBGMForAct(act) {
@@ -884,9 +942,11 @@ function updateRoomAmbience(room) {
   // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
-// Audio init — identical pattern to original working version
-function initAudioOnInteraction() {
+// Audio init — must run synchronously in user gesture for Safari
+function initAudioOnInteraction(e) {
+  dbg('initAudioOnInteraction triggered by: ' + e.type);
   ensureAudio();
+  dbg('after ensureAudio: state=' + (audioCtx ? audioCtx.state : 'null'));
   startBGM(G.act || 1);
   document.removeEventListener('click', initAudioOnInteraction);
   document.removeEventListener('touchstart', initAudioOnInteraction);
