@@ -102,6 +102,20 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .landscape-mode .message-box{min-height:0;padding:6px 12px}
 .landscape-mode .title-bar{padding:4px 10px}
 .landscape-mode .inv-slot{width:36px;height:36px}
+@media (max-width: 640px) {
+  .game-wrap{max-width:100%;width:100%}
+  .title-bar{padding:6px 8px;gap:2px}
+  .title-text{font-size:clamp(6px,1.8vw,8px)}
+  .resource-bars{order:1;width:100%;margin-top:2px}
+  .scene-wrapper,.scene-wrapper canvas#gc{width:100vw!important;height:auto!important;aspect-ratio:16/9}
+  .message-box{min-height:100px;padding:12px 14px}
+  .message-text{font-size:clamp(10px,3vw,13px);line-height:2}
+  .inventory-bar{padding:10px;flex-wrap:wrap;justify-content:center}
+  .inv-slots{flex-wrap:wrap;justify-content:center}
+  .inv-slot{width:44px;height:44px}
+  .nav-area{left:0;right:0;bottom:0;display:flex;gap:4px;padding:4px}
+  .nav-btn{flex:1;min-height:48px;font-size:clamp(10px,3vw,12px)}
+}
 </style>
 </head>
 <body>
@@ -674,11 +688,26 @@ function startBGM(act) {
   if (bgmStarted) stopBGM();
   currentBgmAct = act;
   bgmStarted = true;
-  bgmMaster = audioCtx.createGain();
-  bgmMaster.gain.value = 0.035;
-  bgmMaster.connect(audioCtx.destination);
-  bgmNodes.push(bgmMaster);
-  buildBGMForAct(act);
+
+  function doStart() {
+    bgmMaster = audioCtx.createGain();
+    bgmMaster.gain.value = 0.035;
+    bgmMaster.connect(audioCtx.destination);
+    bgmNodes.push(bgmMaster);
+    buildBGMForAct(act);
+  }
+
+  if (audioCtx.state === 'running') {
+    doStart();
+  } else {
+    // iOS Safari: wait for context to actually be running
+    audioCtx.addEventListener('statechange', function onState() {
+      if (audioCtx.state === 'running') {
+        audioCtx.removeEventListener('statechange', onState);
+        if (bgmStarted && currentBgmAct === act) doStart();
+      }
+    });
+  }
 }
 
 function buildBGMForAct(act) {
@@ -769,6 +798,8 @@ function updateRoomAmbience(room) {
   ambMaster.gain.value = 0.025;
   ambMaster.connect(audioCtx.destination);
   ambNodes.push(ambMaster);
+
+  if (audioCtx.state !== 'running') return;
 
   if (room === 'r4') {
     // Surveillance room — electronic hum + static
