@@ -605,46 +605,233 @@ function sfxBadEnd() {
   o2.start(); o2.stop(t + 1.2);
 }
 
-// ===== AMBIENT BACKGROUND MUSIC =====
+// ===== DYNAMIC BACKGROUND MUSIC =====
 let bgmNodes = [];
-function startBGM() {
-  if (bgmStarted) return;
-  ensureAudio();
+let bgmMaster = null;
+let currentBgmAct = 0;
+let ambNodes = [];
+let currentAmbRoom = '';
+
+function stopBGM() {
+  bgmNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
+  bgmNodes = [];
+  ambNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
+  ambNodes = [];
+}
+
+function makeDrone(master, freq, type, detune, filterFreq, vol) {
+  const o = audioCtx.createOscillator();
+  const f = audioCtx.createBiquadFilter();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq; o.detune.value = detune;
+  f.type = 'lowpass'; f.frequency.value = filterFreq; f.Q.value = 1;
+  o.connect(f); f.connect(g); g.connect(master);
+  g.gain.value = vol || 0.8;
+  o.start();
+  bgmNodes.push(o, f, g);
+}
+
+function startBGM(act) {
+  if (!audioCtx) return;
+  act = act || 1;
+  if (currentBgmAct === act && bgmNodes.length > 0) return;
+  stopBGM();
+  currentBgmAct = act;
   bgmStarted = true;
-  const masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.035;
-  masterGain.connect(audioCtx.destination);
-  function makeDrone(freq, type, detune, filterFreq) {
-    const o = audioCtx.createOscillator();
-    const f = audioCtx.createBiquadFilter();
-    const g = audioCtx.createGain();
-    o.type = type; o.frequency.value = freq; o.detune.value = detune;
-    f.type = 'lowpass'; f.frequency.value = filterFreq; f.Q.value = 1;
-    o.connect(f); f.connect(g); g.connect(masterGain);
-    g.gain.value = 0.8;
-    o.start();
-    bgmNodes.push(o, f, g);
-    return { osc: o, gain: g, filter: f };
+
+  bgmMaster = audioCtx.createGain();
+  bgmMaster.gain.value = 0;
+  bgmMaster.connect(audioCtx.destination);
+  // Fade in
+  bgmMaster.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
+  bgmNodes.push(bgmMaster);
+
+  if (act === 1) {
+    // ACT 1: Mystery/Unease — slow breathing pad, minor key
+    makeDrone(bgmMaster, 55, 'sawtooth', 0, 200, 0.7);
+    makeDrone(bgmMaster, 55.5, 'sawtooth', 7, 180, 0.6);
+    makeDrone(bgmMaster, 82.4, 'triangle', -5, 300, 0.5);
+    makeDrone(bgmMaster, 110, 'sine', 3, 250, 0.4);
+    // Eerie high whisper
+    makeDrone(bgmMaster, 164.8, 'sine', 12, 400, 0.25);
+    makeDrone(bgmMaster, 155.6, 'sine', -8, 350, 0.25);
+    // Slow breathing LFO
+    const lfo = audioCtx.createOscillator();
+    const lfoG = audioCtx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = 0.08;
+    lfoG.gain.value = 0.012;
+    lfo.connect(lfoG); lfoG.connect(bgmMaster.gain);
+    lfo.start();
+    bgmNodes.push(lfo, lfoG);
+  } else if (act === 2) {
+    // ACT 2: Underground Horror — heavier, metallic, faster tremolo
+    makeDrone(bgmMaster, 41, 'sawtooth', 0, 150, 0.8);
+    makeDrone(bgmMaster, 41.5, 'sawtooth', 10, 140, 0.7);
+    makeDrone(bgmMaster, 61.7, 'triangle', -8, 200, 0.6);
+    // Dissonant cluster
+    makeDrone(bgmMaster, 92, 'sine', 15, 280, 0.35);
+    makeDrone(bgmMaster, 87.3, 'sine', -12, 260, 0.35);
+    makeDrone(bgmMaster, 123.5, 'sawtooth', 5, 180, 0.2);
+    // Metallic ring
+    makeDrone(bgmMaster, 330, 'sine', 25, 500, 0.08);
+    // Faster tremolo
+    const lfo = audioCtx.createOscillator();
+    const lfoG = audioCtx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = 0.2;
+    lfoG.gain.value = 0.018;
+    lfo.connect(lfoG); lfoG.connect(bgmMaster.gain);
+    lfo.start();
+    bgmNodes.push(lfo, lfoG);
+  } else {
+    // ACT 3: Escape Tension — pulsing, urgent, heartbeat rhythm
+    makeDrone(bgmMaster, 36.7, 'sawtooth', 0, 120, 0.8);
+    makeDrone(bgmMaster, 37, 'sawtooth', 12, 110, 0.7);
+    makeDrone(bgmMaster, 55, 'triangle', -3, 180, 0.6);
+    // Rising tension
+    makeDrone(bgmMaster, 73.4, 'sine', 8, 220, 0.4);
+    makeDrone(bgmMaster, 98, 'sine', -6, 200, 0.3);
+    // Urgent high
+    makeDrone(bgmMaster, 220, 'sine', 20, 350, 0.12);
+    makeDrone(bgmMaster, 233, 'sine', -15, 320, 0.1);
+    // Heartbeat-speed LFO
+    const lfo = audioCtx.createOscillator();
+    const lfoG = audioCtx.createGain();
+    lfo.type = 'sine'; lfo.frequency.value = 0.9;
+    lfoG.gain.value = 0.008;
+    lfo.connect(lfoG); lfoG.connect(bgmMaster.gain);
+    lfo.start();
+    bgmNodes.push(lfo, lfoG);
+    // Sub-bass pulse
+    const pulse = audioCtx.createOscillator();
+    const pulseG = audioCtx.createGain();
+    const pulseLfo = audioCtx.createOscillator();
+    const pulseLfoG = audioCtx.createGain();
+    pulse.type = 'sine'; pulse.frequency.value = 30;
+    pulseG.gain.value = 0.5;
+    pulseLfo.type = 'square'; pulseLfo.frequency.value = 1.2;
+    pulseLfoG.gain.value = 0.5;
+    pulseLfo.connect(pulseLfoG); pulseLfoG.connect(pulseG.gain);
+    pulse.connect(pulseG); pulseG.connect(bgmMaster);
+    pulse.start(); pulseLfo.start();
+    bgmNodes.push(pulse, pulseG, pulseLfo, pulseLfoG);
   }
-  makeDrone(55, 'sawtooth', 0, 200);
-  makeDrone(55.5, 'sawtooth', 7, 180);
-  makeDrone(82.4, 'triangle', -5, 300);
-  makeDrone(110, 'sine', 3, 250);
-  makeDrone(164.8, 'sine', 12, 400);
-  makeDrone(155.6, 'sine', -8, 350);
-  const lfo = audioCtx.createOscillator();
-  const lfoGain = audioCtx.createGain();
-  lfo.type = 'sine'; lfo.frequency.value = 0.08;
-  lfoGain.gain.value = 0.015;
-  lfo.connect(lfoGain);
-  lfoGain.connect(masterGain.gain);
-  lfo.start();
-  bgmNodes.push(lfo, lfoGain, masterGain);
+}
+
+// ===== ROOM AMBIENCE LAYERS =====
+function updateRoomAmbience(room) {
+  if (room === currentAmbRoom) return;
+  // Stop previous ambience
+  ambNodes.forEach(n => { try { n.stop ? n.stop() : null } catch(e){} try { n.disconnect() } catch(e){} });
+  ambNodes = [];
+  currentAmbRoom = room;
+  if (!audioCtx) return;
+
+  const ambMaster = audioCtx.createGain();
+  ambMaster.gain.value = 0;
+  ambMaster.connect(audioCtx.destination);
+  ambMaster.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 2);
+  ambNodes.push(ambMaster);
+
+  if (room === 'r4') {
+    // Surveillance room — electronic hum + static
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'square'; o.frequency.value = 60;
+    g.gain.value = 0.3;
+    const flt = audioCtx.createBiquadFilter();
+    flt.type = 'lowpass'; flt.frequency.value = 120;
+    o.connect(flt); flt.connect(g); g.connect(ambMaster);
+    o.start(); ambNodes.push(o, g, flt);
+  } else if (room === 'r5') {
+    // Stairwell — wind howling
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 4, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * 0.5 * (0.3 + 0.7 * Math.sin(i / d.length * Math.PI * 3));
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const flt = audioCtx.createBiquadFilter();
+    flt.type = 'bandpass'; flt.frequency.value = 400; flt.Q.value = 2;
+    const g = audioCtx.createGain(); g.gain.value = 0.6;
+    src.connect(flt); flt.connect(g); g.connect(ambMaster);
+    src.start(); ambNodes.push(src, flt, g);
+  } else if (room === 'r6' || room === 'r9') {
+    // Underground/Sewer — dripping water + flowing
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 3, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * 0.3 * (0.2 + 0.8 * Math.pow(Math.sin(i / d.length * Math.PI * 5), 2));
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const flt = audioCtx.createBiquadFilter();
+    flt.type = 'lowpass'; flt.frequency.value = 800;
+    const g = audioCtx.createGain(); g.gain.value = 0.8;
+    src.connect(flt); flt.connect(g); g.connect(ambMaster);
+    src.start(); ambNodes.push(src, flt, g);
+  } else if (room === 'r7') {
+    // Lab — humming equipment + beeping
+    const o1 = audioCtx.createOscillator();
+    const g1 = audioCtx.createGain();
+    o1.type = 'sine'; o1.frequency.value = 120;
+    g1.gain.value = 0.4;
+    o1.connect(g1); g1.connect(ambMaster);
+    o1.start(); ambNodes.push(o1, g1);
+    // Periodic beep
+    const o2 = audioCtx.createOscillator();
+    const g2 = audioCtx.createGain();
+    const lfo = audioCtx.createOscillator();
+    const lfoG = audioCtx.createGain();
+    o2.type = 'sine'; o2.frequency.value = 1000;
+    g2.gain.value = 0.15;
+    lfo.type = 'square'; lfo.frequency.value = 0.5;
+    lfoG.gain.value = 0.15;
+    lfo.connect(lfoG); lfoG.connect(g2.gain);
+    o2.connect(g2); g2.connect(ambMaster);
+    o2.start(); lfo.start(); ambNodes.push(o2, g2, lfo, lfoG);
+  } else if (room === 'r10') {
+    // Boiler room — rumbling fire + steam hiss
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 35;
+    g.gain.value = 0.6;
+    const flt = audioCtx.createBiquadFilter();
+    flt.type = 'lowpass'; flt.frequency.value = 100;
+    o.connect(flt); flt.connect(g); g.connect(ambMaster);
+    o.start(); ambNodes.push(o, g, flt);
+    // Steam hiss
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.15;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const flt2 = audioCtx.createBiquadFilter();
+    flt2.type = 'highpass'; flt2.frequency.value = 4000;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.3;
+    src.connect(flt2); flt2.connect(g2); g2.connect(ambMaster);
+    src.start(); ambNodes.push(src, flt2, g2);
+  } else if (room === 'r11') {
+    // Exit — wind from outside + distant sirens
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 3, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * 0.4 * (0.5 + 0.5 * Math.sin(i / d.length * Math.PI * 2));
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const flt = audioCtx.createBiquadFilter();
+    flt.type = 'bandpass'; flt.frequency.value = 300; flt.Q.value = 1;
+    const g = audioCtx.createGain(); g.gain.value = 0.5;
+    src.connect(flt); flt.connect(g); g.connect(ambMaster);
+    src.start(); ambNodes.push(src, flt, g);
+  }
+  // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
 function initAudioOnInteraction() {
   ensureAudio();
-  startBGM();
+  startBGM(G.act || 1);
   document.removeEventListener('click', initAudioOnInteraction);
   document.removeEventListener('touchstart', initAudioOnInteraction);
 }
@@ -1056,7 +1243,7 @@ function closeAct(){
   G.modalOpen=null;
 }
 function showActTitle(act){
-  G.modalOpen='act';sfxActTransition();
+  G.modalOpen='act';sfxActTransition();startBGM(act);
   const titles={1:'Act 1: 감금',2:'Act 2: 진실',3:'Act 3: 탈출'};
   const descs={1:'세인트 머시 정신병원 1층',2:'지하에 숨겨진 비밀',3:'최후의 탈출'};
   document.getElementById('act-title').textContent=titles[act]||'';
@@ -1105,6 +1292,7 @@ function restartGame(){
   msgHistory.length=0;msgIdx=-1;
   G._shadowCd=false;G._railCd=false;G._waterCd=false;G._r8deskRead=false;
   hintCount=0;firstItemShown=false;lastAction=0;
+  currentBgmAct=0;currentAmbRoom='';stopBGM();
   document.getElementById('san-bar').style.width='100%';
   document.getElementById('san-bar').style.background='#3366aa';
   document.getElementById('san-num').textContent='100';
@@ -1460,6 +1648,7 @@ function goRoom(id){
   }
   G.room=id;G.pad=false;G.sel=null;
   closeCodePad();closeDoc();closeDial();sfxDoor();
+  updateRoomAmbience(id);
   document.getElementById('room-label').textContent=ROOM_LABELS[id];
   document.getElementById('room-num').textContent=ROOM_NUMS[id];
   setMsg(ROOM_MSGS[id]);
