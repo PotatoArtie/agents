@@ -842,9 +842,11 @@ function updateRoomAmbience(room) {
   // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
-// Audio init: capture phase ensures it fires even when tutorial overlay is active
+// Audio init on first user gesture — always force-rebuild BGM
 function initAudioOnInteraction() {
   ensureAudio();
+  // Force fresh BGM: nodes created on suspended context won't play on iOS Safari
+  stopBGM();
   startBGM(G.act || 1);
   document.removeEventListener('click', initAudioOnInteraction, true);
   document.removeEventListener('touchstart', initAudioOnInteraction, true);
@@ -1485,7 +1487,7 @@ function handleClick(id){
       } else setMsg('이미 열린 금고다.');
     } else if(id==='r4_panel'){
       if(!G.flags.r4_powered){
-        if(G.sel==='fuse'){G.flags.r4_powered=true;removeItem('fuse');flash('#004400');sfxPower();G.sel=null;setMsg('퓨즈를 설치했다! 지하로 가는 문의 전자 잠금이 해제되었다!')}
+        if(G.sel==='fuse'){G.flags.r4_powered=true;removeItem('fuse');flash('#004400');sfxPower();G.sel=null;setMsg('퓨즈를 설치했다! 지하로 가는 문의 전자 잠금이 해제되었다!');setupNav()}
         else{
           if(G.inv.includes('fuse')) setMsg('전력 패널. 퓨즈가 빠져있다. 인벤토리에서 퓨즈를 선택하세요.');
           else setMsg('전력 패널. 퓨즈가 빠져있어 지하 통로가 잠겨있다.');
@@ -1542,7 +1544,7 @@ function handleClick(id){
       else setMsg('더 이상 찾을 것이 없는 서류 더미다.');
     } else if(id==='r8_safe'){
       if(!G.flags.r8_safe2){
-        if(G.sel==='chemical'&&G.inv.includes('formula')){G.flags.r8_safe2=true;removeItem('chemical');removeItem('formula');flash('#004400');sfxAcid();G.sel=null;openDoc('doc6');setMsg('조합 공식대로 화학약품을 조합해 금고를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!')}
+        if(G.sel==='chemical'&&G.inv.includes('formula')){G.flags.r8_safe2=true;removeItem('chemical');removeItem('formula');flash('#004400');sfxAcid();G.sel=null;openDoc('doc6');setMsg('조합 공식대로 화학약품을 조합해 금고를 부식시켰다! 탈출 매뉴얼을 발견했다. 하수도로의 길이 열렸다!');setupNav()}
         else if(G.sel==='chemical'&&!G.inv.includes('formula')){setMsg('화학약품만으로는 안 된다. 올바른 조합 공식이 필요하다.')}
         else{
           if(G.inv.includes('chemical')&&G.inv.includes('formula')) setMsg('금고가 잠겨있다. 화학약품을 선택해서 조합 공식대로 부식시키자.');
@@ -1561,7 +1563,7 @@ function handleClick(id){
       valveClicks++;
       if(valveClicks>=3&&!G.flags.r9_gate){
         G.flags.r9_gate=true;flash('#004400');sfxPower();
-        setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
+        setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');setupNav();
       } else if(!G.flags.r9_gate){
         sfxValve();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 더 돌려야 한다. ('+valveClicks+'/3)');
       } else setMsg('밸브는 이미 완전히 열려있다.');
@@ -1579,7 +1581,7 @@ function handleClick(id){
       else setMsg('거대한 보일러. 열기가 대단하다.');
     } else if(id==='r10_panel'){
       if(!G.flags.r10_steam){
-        if(G.sel==='card'){G.flags.r10_steam=true;removeItem('card');flash('#004400');sfxPower();G.sel=null;setMsg('키카드로 제어 패널을 작동시켰다! 증기가 차단되고 비상출구로의 길이 열렸다!')}
+        if(G.sel==='card'){G.flags.r10_steam=true;removeItem('card');flash('#004400');sfxPower();G.sel=null;setMsg('키카드로 제어 패널을 작동시켰다! 증기가 차단되고 비상출구로의 길이 열렸다!');setupNav()}
         else{
           if(G.inv.includes('card')) setMsg('제어 패널. 키카드 슬롯이 있다. 키카드를 선택하세요.');
           else setMsg('제어 패널. 키카드 인증이 필요하다.');
@@ -2670,8 +2672,9 @@ function renderTutStep(){
 
 // ===== INIT =====
 function startGame(){
-  ensureAudio();
-  startBGM(1);
+  // Do NOT call ensureAudio/startBGM here — startGame may be called
+  // during page load (tutorial skip) without user gesture.
+  // Audio init happens in initAudioOnInteraction (capture phase listener).
   setupAmbientScare();
   setupDripLoop();
   goRoom('r1');
