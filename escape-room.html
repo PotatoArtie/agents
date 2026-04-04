@@ -947,6 +947,9 @@ function initAudioOnInteraction(e) {
   dbg('initAudioOnInteraction triggered by: ' + e.type);
   ensureAudio();
   dbg('after ensureAudio: state=' + (audioCtx ? audioCtx.state : 'null'));
+  // Force restart: BGM may have been "started" during page init without user gesture
+  // (showActTitle→startBGM runs before any click, leaving nodes in suspended context)
+  if (bgmStarted) { dbg('force-stopping BGM created without gesture'); stopBGM(); }
   startBGM(G.act || 1);
   document.removeEventListener('click', initAudioOnInteraction);
   document.removeEventListener('touchstart', initAudioOnInteraction);
