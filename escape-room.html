@@ -137,8 +137,10 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
       <div class="dial-title">[ COMBINATION SAFE ]</div>
       <div class="dial-display" id="dial-display">00</div>
       <div class="dial-btns">
+        <button class="dial-btn" id="dial-left5" style="font-size:clamp(8px,2vw,10px)">&laquo;5</button>
         <button class="dial-btn" id="dial-left">&larr;</button>
         <button class="dial-btn" id="dial-right">&rarr;</button>
+        <button class="dial-btn" id="dial-right5" style="font-size:clamp(8px,2vw,10px)">5&raquo;</button>
         <button class="dial-btn" id="dial-ok">OK</button>
       </div>
       <div style="text-align:center;color:#555;font-size:7px;font-family:inherit" id="dial-step">1 / 3</div>
@@ -414,7 +416,7 @@ const G = {
   flags:{bed:false,wall:false,lock:false,nurse:false,
     r3_desk:false,r3_cabinet:false,r3_doc1:false,
     r4_monitor:false,r4_safe:false,r4_powered:false,
-    r5_grate:false,
+    r5_grate:false,r5_battery:false,
     r6_doc2:false,r6_corpse:false,
     r7_table:false,r7_formula:false,
     r8_shelf:false,r8_safe2:false,
@@ -434,7 +436,8 @@ const ITEMS = {
   crowbar:{name:'쇠지렛대',desc:'무거운 쇠지렛대. 무언가를 뜯어낼 수 있다.'},
   mask:{name:'가스마스크',desc:'낡은 가스마스크. 유독가스로부터 보호해준다.'},
   badge:{name:'원장 뱃지',desc:'원장의 신분증 뱃지. 최고 보안등급 접근 가능.'},
-  formula:{name:'조합 공식',desc:'화학약품 조합 공식이 적힌 종이.'}
+  formula:{name:'조합 공식',desc:'화학약품 조합 공식이 적힌 종이.'},
+  battery:{name:'건전지',desc:'아직 잔량이 남은 건전지. 손전등에 쓸 수 있을 것 같다.'}
 };
 
 const DOCS = {
@@ -503,7 +506,8 @@ const zones = {
   ],
   r5:[
     {id:'r5_grate',x:60,y:50,w:40,h:28,tip:'환기구'},
-    {id:'r5_rail',x:20,y:10,w:20,h:60,tip:'난간'}
+    {id:'r5_rail',x:20,y:10,w:20,h:60,tip:'난간'},
+    {id:'r5_shelf',x:120,y:40,w:30,h:24,tip:'선반'}
   ],
   r6:[
     {id:'r6_corpse',x:80,y:40,w:40,h:30,tip:'쓰러진 무언가'},
@@ -674,6 +678,11 @@ function drawItemSprite(c,id){
     x.fillStyle='#e0d8c0';x.fillRect(5,4,22,24);
     x.fillStyle='#a09878';x.fillRect(8,8,16,1);x.fillRect(8,12,14,1);x.fillRect(8,16,16,1);x.fillRect(8,20,10,1);
     x.fillStyle='#2244aa';x.fillRect(20,18,6,6);
+  } else if(id==='battery'){
+    x.fillStyle='#555';x.fillRect(8,8,16,16);
+    x.fillStyle='#33aa44';x.fillRect(10,10,12,12);
+    x.fillStyle='#888';x.fillRect(14,5,4,4);
+    x.fillStyle='#228822';x.fillRect(14,14,4,2);x.fillRect(15,12,2,6);
   }
 }
 
@@ -731,7 +740,7 @@ function showTouchFeedback(zone){G.touchFeedback={zone,until:G.t+300}}
 function openDoc(id){
   if(!DOCS[id])return;
   G.modalOpen='doc';
-  if(!G.docsRead.includes(id)){G.docsRead.push(id);changeSanity(5)}
+  if(!G.docsRead.includes(id)){G.docsRead.push(id);changeSanity(8)}
   document.getElementById('doc-title').textContent=DOCS[id].title;
   document.getElementById('doc-body').textContent=DOCS[id].body;
   document.getElementById('doc-modal').classList.add('open');
@@ -764,14 +773,10 @@ function updateDialDisplay(){
   document.getElementById('dial-step').textContent=(G.dialSeq.length+1)+' / '+G.dialTarget.length;
 }
 
-document.getElementById('dial-left').addEventListener('click',()=>{
-  G.dialVal=(G.dialVal-1+50)%50;
-  sfxNumpad();updateDialDisplay();
-});
-document.getElementById('dial-right').addEventListener('click',()=>{
-  G.dialVal=(G.dialVal+1)%50;
-  sfxNumpad();updateDialDisplay();
-});
+document.getElementById('dial-left').addEventListener('click',()=>{G.dialVal=(G.dialVal-1+50)%50;sfxNumpad();updateDialDisplay()});
+document.getElementById('dial-right').addEventListener('click',()=>{G.dialVal=(G.dialVal+1)%50;sfxNumpad();updateDialDisplay()});
+document.getElementById('dial-left5').addEventListener('click',()=>{G.dialVal=(G.dialVal-5+50)%50;sfxNumpad();updateDialDisplay()});
+document.getElementById('dial-right5').addEventListener('click',()=>{G.dialVal=(G.dialVal+5)%50;sfxNumpad();updateDialDisplay()});
 document.getElementById('dial-ok').addEventListener('click',()=>{
   G.dialSeq.push(G.dialVal);
   if(G.dialSeq.length>=G.dialTarget.length){
@@ -947,6 +952,9 @@ function handleClick(id){
       if(!G._railCd){G._railCd=true;setTimeout(()=>G._railCd=false,10000);changeSanity(-3);
       setMsg('난간 너머 아래를 내려다본다. 끝이 보이지 않는 어둠... 현기증이 난다.');
       } else setMsg('다시 내려다볼 용기가 없다.');
+    } else if(id==='r5_shelf'){
+      if(!G.flags.r5_battery){G.flags.r5_battery=true;changeBattery(50);flash('#004400');sfxPickup();setMsg('선반에서 건전지를 발견했다! 배터리가 충전되었다. [+50 배터리]','item')}
+      else setMsg('선반에는 더 이상 아무것도 없다.');
     }
   } else if(G.room==='r6'){
     if(id==='r6_corpse'){
@@ -998,11 +1006,11 @@ function handleClick(id){
     if(id==='r9_valve'){
       if(!G.inv.includes('mask')){changeSanity(-10);flash();sfxScare();setMsg('유독가스가 뿜어져 나온다! 가스마스크 없이는 밸브를 돌릴 수 없다!');return}
       valveClicks++;
-      if(valveClicks>=2&&!G.flags.r9_gate){
+      if(valveClicks>=3&&!G.flags.r9_gate){
         G.flags.r9_gate=true;flash('#004400');sfxPower();
         setMsg('가스마스크를 쓰고 밸브를 완전히 돌렸다! 수문이 열리면서 보일러실로의 길이 열렸다!');
       } else if(!G.flags.r9_gate){
-        sfxClick();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 한 번 더 돌려야 할 것 같다. ('+valveClicks+'/2)');
+        sfxClick();setMsg('가스마스크 덕분에 가스를 견딜 수 있다. 밸브가 뻑뻑하다. 더 돌려야 한다. ('+valveClicks+'/3)');
       } else setMsg('밸브는 이미 완전히 열려있다.');
     } else if(id==='r9_gate'){
       if(G.flags.r9_gate) setMsg('수문이 열려있다. 보일러실로 갈 수 있다.');
@@ -1589,6 +1597,16 @@ function drawRoom5(fv,t){
   ctx.strokeStyle='#1e1c24';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(110*S,8*S);ctx.lineTo(112*S,30*S);ctx.lineTo(108*S,55*S);ctx.stroke();
 
+  // Shelf (right wall)
+  p(122,42,28,20,'#2a2018');p(123,43,26,18,'#221a14');
+  p(124,50,24,1,'#352a1e');
+  // Battery on shelf
+  if(!G.flags.r5_battery){
+    p(132,44,8,6,'#555');p(133,45,6,4,'#33aa44');p(135,42,2,3,'#888');
+  }
+  // Dusty items
+  p(126,52,6,8,'#333');p(140,53,4,7,'#444');
+
   drawTouchFeedback();
 }
 
@@ -2041,7 +2059,7 @@ function setupAmbientScare(){
       flash();sfxScare();changeSanity(-2);
       setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)],'ambient'),110);
     }
-  },22000);
+  },35000);
 }
 
 // Water drip sound loop
