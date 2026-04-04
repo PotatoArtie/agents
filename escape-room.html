@@ -232,7 +232,8 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 <div class="rank-modal" id="rank-modal">
   <div class="rank-modal-content">
     <div class="rank-header">&#127942; ESCAPE RANKING &#127942;</div>
-    <div id="rank-list" style="margin-bottom:16px"></div>
+    <div id="rank-list" style="margin-bottom:12px"></div>
+    <canvas id="escape-anim" width="280" height="60" style="display:block;width:100%;height:60px;image-rendering:pixelated;image-rendering:crisp-edges;margin-bottom:12px"></canvas>
     <button class="doc-close" id="rank-close">닫기</button>
   </div>
 </div>
@@ -1707,9 +1708,107 @@ function restartGame(){
 }
 document.getElementById('btn-restart').addEventListener('click',restartGame);
 
+// ===== ESCAPE ANIMATION =====
+let escAnimId=null;
+function startEscapeAnim(){
+  const cv=document.getElementById('escape-anim');
+  const c=cv.getContext('2d');
+  const W=280,H=60;
+  let px=-10,frame=0,t=0;
+  const obstacles=[80,140,200,250];
+  // pixel char: 8x12 running figure
+  function drawChar(x,y,f){
+    c.fillStyle='#cc9944';
+    // head
+    c.fillRect(x+2,y,4,3);
+    // body
+    c.fillRect(x+2,y+3,4,4);
+    // arms
+    if(f%2===0){c.fillRect(x,y+4,2,2);c.fillRect(x+6,y+3,2,2)}
+    else{c.fillRect(x,y+3,2,2);c.fillRect(x+6,y+4,2,2)}
+    // legs
+    if(f%2===0){c.fillRect(x+2,y+7,2,3);c.fillRect(x+5,y+7,2,2)}
+    else{c.fillRect(x+5,y+7,2,3);c.fillRect(x+2,y+7,2,2)}
+  }
+  function drawDoor(x){
+    c.fillStyle='#553322';c.fillRect(x,H-28,12,22);
+    c.fillStyle='#442211';c.fillRect(x+1,H-27,10,20);
+    c.fillStyle='#cc9944';c.fillRect(x+8,H-17,2,2);
+  }
+  function drawWall(x){
+    c.fillStyle='#222';
+    for(let j=0;j<3;j++){
+      for(let i=0;i<2;i++){
+        c.fillRect(x+i*8+(j%2)*4,H-26+j*8,7,7);
+      }
+    }
+  }
+  function drawTree(x){
+    c.fillStyle='#1a3a1a';
+    c.fillRect(x+3,H-24,4,8);
+    c.fillRect(x,H-30,10,8);
+    c.fillRect(x+2,H-34,6,6);
+    c.fillStyle='#332211';
+    c.fillRect(x+4,H-16,2,10);
+  }
+  function drawMoon(){
+    c.fillStyle='#888866';
+    c.beginPath();c.arc(240,12,8,0,Math.PI*2);c.fill();
+    c.fillStyle='#0a0008';
+    c.beginPath();c.arc(243,10,7,0,Math.PI*2);c.fill();
+  }
+  function loop(){
+    t++;
+    c.fillStyle='#0a0008';c.fillRect(0,0,W,H);
+    // ground
+    c.fillStyle='#1a1218';c.fillRect(0,H-6,W,6);
+    // ground detail
+    c.fillStyle='#221820';
+    for(let i=0;i<28;i++){c.fillRect(i*10+((t>>2)%10),H-3,4,1)}
+    // stars
+    c.fillStyle='#444';
+    c.fillRect(30,5,1,1);c.fillRect(90,10,1,1);c.fillRect(150,3,1,1);c.fillRect(200,8,1,1);c.fillRect(260,6,1,1);
+    drawMoon();
+    // scene elements scroll
+    const scroll=t*1.2;
+    // walls (hospital)
+    if(scroll<120){drawWall(40-scroll*0.3);drawWall(60-scroll*0.3);drawDoor(80-scroll*0.3)}
+    // trees (outside)
+    drawTree(160-scroll*0.3);drawTree(220-scroll*0.3);drawTree(300-scroll*0.3);
+    // character
+    const jumping=(t%60)<15;
+    const charY=jumping?H-20:H-18;
+    if(frame%4===0) frame++;
+    drawChar(px,charY,t>>2);
+    // move character
+    if(px<130) px+=1.2;
+    // freedom text at end
+    if(px>=120){
+      c.fillStyle='#cc9944';c.font='8px monospace';c.textAlign='center';
+      const alpha=Math.min(1,(px-120)/10);
+      c.globalAlpha=alpha;
+      c.fillText('FREEDOM',220,35);
+      c.globalAlpha=1;
+    }
+    if(px<140) escAnimId=requestAnimationFrame(loop);
+    else{
+      // loop
+      px=-10;t=0;
+      escAnimId=requestAnimationFrame(loop);
+    }
+  }
+  if(escAnimId)cancelAnimationFrame(escAnimId);
+  px=-10;t=0;
+  escAnimId=requestAnimationFrame(loop);
+}
+function stopEscapeAnim(){
+  if(escAnimId){cancelAnimationFrame(escAnimId);escAnimId=null}
+}
+
 // ===== RANKING POPUP =====
 document.getElementById('rank-btn').addEventListener('click',()=>{
   document.getElementById('rank-modal').classList.add('open');
+  startEscapeAnim();
   const listEl=document.getElementById('rank-list');
   listEl.innerHTML='<div style="color:#555;font-size:9px;font-family:inherit">로딩 중...</div>';
   loadRankingsOnline(function(rankings){
@@ -1720,6 +1819,7 @@ document.getElementById('rank-btn').addEventListener('click',()=>{
   });
 });
 document.getElementById('rank-close').addEventListener('click',()=>{
+  stopEscapeAnim();
   document.getElementById('rank-modal').classList.remove('open');
 });
 
