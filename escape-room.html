@@ -3715,134 +3715,181 @@ init();
     t+=0.02;
     c.clearRect(0,0,W,H);
 
-    // Background — dark gradient
-    px(0,0,W,H,'#050310');
-    // Ceiling
-    px(0,0,W,30,'#0a0818');
-    // Floor — dark tiles
-    px(0,190,W,50,'#0c0a12');
+    // Background
+    px(0,0,W,H,'#12101e');
+    // Ceiling — visible
+    px(0,0,W,30,'#1a1828');
+    // Ceiling pipes
+    px(40,8,240,4,'#3a3848');px(40,8,240,1,'#4a4858');
+    px(80,8,3,6,'#353540');px(200,8,3,6,'#353540');
+
+    // Floor — checkered tiles, brighter
+    px(0,190,W,50,'#1e1a28');
     for(let i=0;i<16;i++){
-      px(i*20,190,19,24,(i%2===0)?'#0e0c14':'#100e16');
-      px(i*20,214,19,26,(i%2===1)?'#0e0c14':'#100e16');
+      px(i*20,190,19,24,(i%2===0)?'#22202e':'#1a1826');
+      px(i*20,214,19,26,(i%2===1)?'#22202e':'#1a1826');
     }
 
-    // Walls — perspective corridor
+    // Walls — perspective corridor, BRIGHTER
     c.save();
-    // Left wall
-    c.fillStyle='#1a1422';
+    c.fillStyle='#2e2640';
     c.beginPath();c.moveTo(0,30);c.lineTo(0,190);c.lineTo(100,190);c.lineTo(120,30);c.closePath();c.fill();
-    // Right wall
+    c.fillStyle='#2c2438';
     c.beginPath();c.moveTo(W,30);c.lineTo(W,190);c.lineTo(220,190);c.lineTo(200,30);c.closePath();c.fill();
     c.restore();
 
-    // Wall texture
-    c.globalAlpha=0.15;
-    for(let i=0;i<8;i++){px(10+i*12,40+i*15,2,100-i*10,'#0a0810')}
-    for(let i=0;i<8;i++){px(308-i*12,40+i*15,2,100-i*10,'#0a0810')}
+    // Wall bricks pattern
+    c.globalAlpha=0.2;
+    for(let j=0;j<10;j++){
+      for(let i=0;i<5;i++){
+        const bx=5+i*20+(j%2)*10;
+        const by=35+j*15;
+        if(bx<100) px(bx,by,18,13,'#28203a');
+      }
+      for(let i=0;i<5;i++){
+        const bx=225+i*20+(j%2)*10;
+        const by=35+j*15;
+        if(bx<W-5) px(bx,by,18,13,'#28203a');
+      }
+    }
     c.globalAlpha=1;
 
-    // Corridor end (darkness)
-    px(120,30,80,160,'#030208');
+    // Corridor end
+    px(120,30,80,160,'#0a0818');
 
-    // EXIT sign — glowing green
-    const exitGlow=0.6+Math.sin(t*2)*0.3;
+    // EXIT sign — bright glowing green
+    const exitGlow=0.7+Math.sin(t*2)*0.25;
+    c.globalAlpha=1;
+    px(138,33,44,14,'#0c4c0c');
+    c.save();c.fillStyle='#00ee00';c.font='bold 11px monospace';
     c.globalAlpha=exitGlow;
-    px(140,35,40,12,'#0a3a0a');
-    c.save();c.fillStyle='#00cc00';c.font='bold 10px monospace';
-    c.fillText('EXIT',148,45);c.restore();
-    // Exit glow
-    c.globalAlpha=exitGlow*0.15;
-    px(130,28,60,30,'#00ff00');
+    c.fillText('EXIT',146,45);c.restore();
+    // Exit glow halo
+    c.globalAlpha=exitGlow*0.25;
+    c.fillStyle='#00ff44';
+    c.beginPath();c.arc(160,40,25,0,Math.PI*2);c.fill();
     c.globalAlpha=1;
 
-    // Flickering fluorescent light
-    const flicker=Math.random()>0.95?0.1:0.7+Math.sin(t*8)*0.15;
+    // Fluorescent lights — BRIGHT, two tubes
+    const flicker=Math.random()>0.93?0.2:0.85+Math.sin(t*8)*0.1;
     c.globalAlpha=flicker;
-    px(80,28,160,2,'#ffffaa');
-    c.globalAlpha=flicker*0.06;
-    c.beginPath();c.moveTo(100,30);c.lineTo(220,30);c.lineTo(260,190);c.lineTo(60,190);c.closePath();c.fillStyle='#ffffcc';c.fill();
+    px(60,26,80,3,'#ffffcc');px(180,26,80,3,'#ffffcc');
+    // Strong light cone
+    c.globalAlpha=flicker*0.15;
+    c.fillStyle='#ffffdd';
+    c.beginPath();c.moveTo(80,30);c.lineTo(240,30);c.lineTo(290,190);c.lineTo(30,190);c.closePath();c.fill();
     c.globalAlpha=1;
 
-    // Hospital bed (left side)
-    px(15,130,70,30,'#252c32');
-    px(17,120,66,12,'#404040');
-    // Blood on sheet
-    px(35,118,15,8,'#5a0000');px(40,122,8,10,'#4a0000');
+    // Hospital bed (left side) — brighter colors
+    px(10,128,75,32,'#3a4250');
+    px(12,116,71,14,'#606878');
+    // Sheet
+    px(14,117,67,12,'#707880');
+    // Blood on sheet — vivid
+    px(32,115,18,10,'#880000');px(38,119,10,12,'#770000');
+    // Pillow
+    px(14,112,22,6,'#606070');
+    // Bed frame posts
+    px(8,110,3,52,'#3a4250');px(84,110,3,52,'#3a4250');
     // IV stand
-    px(80,80,2,80,'#353840');px(76,76,10,4,'#353840');
-    px(77,72,6,5,'#2a4a5a');
+    px(86,70,2,90,'#4a5060');px(82,66,10,4,'#4a5060');
+    px(83,60,8,7,'#4488aa');
+    c.globalAlpha=0.5;px(84,62,6,4,'#88ccdd');c.globalAlpha=1;
 
-    // Blood handprints on left wall
-    px(30,70,4,12,'#5a0000');px(36,68,4,14,'#4a0000');px(42,70,4,12,'#5a0000');
-    px(32,80,14,6,'#5a0000');
-    // Blood drip
-    px(37,86,3,10,'#4a0000');px(38,96,2,6,'#3a0000');
+    // Blood handprints on left wall — VIVID red
+    px(25,65,5,14,'#aa0000');px(33,62,5,17,'#990000');px(41,65,5,14,'#aa0000');
+    px(22,68,4,10,'#880000');px(47,69,3,9,'#880000');
+    px(27,77,20,8,'#aa0000');
+    // Blood drip — bright
+    px(34,85,4,14,'#990000');px(35,99,3,8,'#770000');px(36,107,2,5,'#660000');
+    px(40,82,3,12,'#880000');px(41,94,2,6,'#660000');
 
-    // Creepy hands reaching from walls
-    const handWave=Math.sin(t*1.5)*3;
-    // Left wall hands
-    c.save();c.globalAlpha=0.5+Math.sin(t*0.8)*0.15;
-    // Hand 1
-    px(95,90+handWave,14,4,'#3a2828');
-    px(95,86+handWave,3,8,'#3a2828');px(100,84+handWave,3,10,'#3a2828');px(105,86+handWave,3,8,'#3a2828');
-    // Hand 2
-    px(90,140-handWave,16,4,'#3a2828');
-    px(90,136-handWave,3,8,'#3a2828');px(95,134-handWave,3,10,'#3a2828');px(100,136-handWave,3,8,'#3a2828');px(105,135-handWave,3,9,'#3a2828');
-    // Right wall hands
-    px(210,100-handWave,14,4,'#3a2828');
-    px(210,96-handWave,3,8,'#3a2828');px(215,94-handWave,3,10,'#3a2828');px(220,96-handWave,3,8,'#3a2828');
-    px(215,150+handWave,16,4,'#3a2828');
-    px(215,146+handWave,3,8,'#3a2828');px(220,144+handWave,3,10,'#3a2828');px(225,146+handWave,3,8,'#3a2828');px(230,145+handWave,3,9,'#3a2828');
-    c.restore();
-
-    // Player silhouette (center, back facing)
-    const playerY=155+Math.sin(t*0.5)*1;
-    // Body
-    px(150,playerY,20,35,'#0a0a0a');
-    // Head
-    px(153,playerY-12,14,14,'#0a0a0a');
-    // Flashlight beam
+    // Creepy hands reaching from walls — SKIN COLORED, visible
+    const handWave=Math.sin(t*1.5)*4;
     c.save();
-    c.globalAlpha=0.12;
-    c.fillStyle='#ffeeaa';
+    // Left wall hands — flesh tone
+    // Hand 1 (upper)
+    c.globalAlpha=0.8;
+    px(92,85+handWave,18,5,'#7a5a4a');
+    px(92,80+handWave,4,10,'#7a5a4a');px(98,78+handWave,4,12,'#7a5a4a');px(104,80+handWave,4,10,'#7a5a4a');px(108,82+handWave,3,8,'#7a5a4a');
+    // Nails
+    px(93,79+handWave,2,2,'#554040');px(99,77+handWave,2,2,'#554040');px(105,79+handWave,2,2,'#554040');
+    // Hand 2 (lower)
+    px(88,138-handWave,20,5,'#6a4a3a');
+    px(88,132-handWave,4,10,'#6a4a3a');px(94,130-handWave,4,12,'#6a4a3a');px(100,132-handWave,4,10,'#6a4a3a');px(106,131-handWave,3,11,'#6a4a3a');
+    px(89,131-handWave,2,2,'#554040');px(95,129-handWave,2,2,'#554040');px(101,131-handWave,2,2,'#554040');
+
+    // Right wall hands
+    px(212,95-handWave,18,5,'#7a5a4a');
+    px(212,90-handWave,4,10,'#7a5a4a');px(218,88-handWave,4,12,'#7a5a4a');px(224,90-handWave,4,10,'#7a5a4a');
+    px(213,89-handWave,2,2,'#554040');px(219,87-handWave,2,2,'#554040');
+    px(216,148+handWave,20,5,'#6a4a3a');
+    px(216,142+handWave,4,10,'#6a4a3a');px(222,140+handWave,4,12,'#6a4a3a');px(228,142+handWave,4,10,'#6a4a3a');px(234,141+handWave,3,11,'#6a4a3a');
+    c.restore();
+
+    // Player silhouette (center, back facing) — slightly visible clothes
+    const playerY=152+Math.sin(t*0.5)*1;
+    // Legs
+    px(153,playerY+24,7,14,'#1a1a2a');px(162,playerY+24,7,14,'#1a1a2a');
+    // Body — dark jacket
+    px(148,playerY,24,26,'#1e1e30');
+    px(150,playerY+2,20,22,'#222238');
+    // Arms
+    px(144,playerY+4,6,18,'#1e1e30');px(172,playerY+4,6,18,'#1e1e30');
+    // Head — hair visible
+    px(153,playerY-14,16,16,'#2a2020');
+    px(155,playerY-12,12,12,'#1a1218');
+    // Flashlight — bright yellow cone
+    c.save();
+    c.globalAlpha=0.35;
+    c.fillStyle='#ffee88';
     c.beginPath();
-    c.moveTo(170,playerY+5);c.lineTo(200,playerY-30);c.lineTo(200,playerY+40);c.closePath();
+    c.moveTo(178,playerY+8);c.lineTo(220,playerY-40);c.lineTo(220,playerY+50);c.closePath();
     c.fill();
-    // Narrow bright core
-    c.globalAlpha=0.25;
+    c.globalAlpha=0.5;
+    c.fillStyle='#ffff99';
     c.beginPath();
-    c.moveTo(170,playerY+5);c.lineTo(195,playerY-10);c.lineTo(195,playerY+20);c.closePath();
+    c.moveTo(178,playerY+8);c.lineTo(210,playerY-15);c.lineTo(210,playerY+28);c.closePath();
     c.fill();
     c.restore();
-    // Flashlight in hand
-    px(168,playerY+3,8,3,'#888');px(169,playerY+4,6,1,'#aaa');
+    // Flashlight body
+    px(174,playerY+6,10,4,'#aaaaaa');px(175,playerY+7,8,2,'#cccccc');
+    // Light dot on flashlight
+    px(183,playerY+7,2,2,'#ffff88');
 
-    // Blood trail on floor (leading forward)
-    c.globalAlpha=0.4;
-    px(155,192,10,3,'#4a0000');px(158,196,8,2,'#3a0000');
-    px(156,200,6,2,'#3a0000');px(160,205,4,2,'#2a0000');
+    // Blood trail on floor — vivid
+    c.globalAlpha=0.7;
+    px(152,193,14,4,'#880000');px(156,198,10,3,'#770000');
+    px(154,203,8,3,'#660000');px(158,208,6,2,'#550000');
     c.globalAlpha=1;
 
-    // Shadow figure at corridor end
+    // Shadow figure at corridor end — clearer
     c.save();
-    c.globalAlpha=0.3+Math.sin(t*0.7)*0.1;
-    const sx=148+Math.sin(t*0.4)*2;
-    px(sx,55,24,80,'#000');
+    const sx=147+Math.sin(t*0.4)*3;
+    c.globalAlpha=0.55+Math.sin(t*0.7)*0.1;
+    // Body
+    px(sx,58,26,78,'#06040e');
+    px(sx+2,56,22,80,'#08060f');
     // Head
-    px(sx+4,42,16,16,'#000');
-    // Eyes (subtle red glow)
-    c.globalAlpha=0.4+Math.sin(t*3)*0.2;
-    px(sx+7,48,3,2,'#660000');px(sx+14,48,3,2,'#660000');
+    px(sx+4,42,18,18,'#06040e');
+    // Eyes — BRIGHT red glow
+    c.globalAlpha=0.7+Math.sin(t*3)*0.25;
+    px(sx+7,49,4,3,'#cc0000');px(sx+15,49,4,3,'#cc0000');
+    // Eye glow
+    c.globalAlpha=0.15+Math.sin(t*3)*0.1;
+    c.fillStyle='#ff0000';
+    c.beginPath();c.arc((sx+9)*1,50.5,6,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc((sx+17)*1,50.5,6,0,Math.PI*2);c.fill();
     c.restore();
 
-    // Vignette
-    const grad=c.createRadialGradient(W/2,H/2,60,W/2,H/2,180);
+    // Vignette — lighter
+    const grad=c.createRadialGradient(W/2,H/2,80,W/2,H/2,190);
     grad.addColorStop(0,'rgba(0,0,0,0)');
-    grad.addColorStop(1,'rgba(0,0,0,0.7)');
+    grad.addColorStop(1,'rgba(0,0,0,0.45)');
     c.fillStyle=grad;c.fillRect(0,0,W,H);
 
-    // CRT scanlines
-    c.globalAlpha=0.08;
+    // CRT scanlines — subtle
+    c.globalAlpha=0.05;
     for(let y=0;y<H;y+=2){px(0,y,W,1,'#000')}
     c.globalAlpha=1;
 
