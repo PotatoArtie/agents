@@ -201,6 +201,24 @@ function ensureAudio() {
   }
 }
 
+// iOS Safari unlock: must play a sound synchronously in a user gesture
+function unlockAudio() {
+  ensureAudio();
+  if (!audioCtx) return;
+  // Play a silent buffer to unlock the audio pipeline
+  const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.start(0);
+  // Also create+start+stop an oscillator as extra unlock
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  g.gain.value = 0;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.001);
+}
+
 function sfxPickup() {
   ensureAudio();
   const o = audioCtx.createOscillator();
@@ -841,12 +859,8 @@ function updateRoomAmbience(room) {
 }
 
 function initAudioOnInteraction() {
-  ensureAudio();
-  if (audioCtx && audioCtx.state !== 'running') {
-    audioCtx.resume().then(() => startBGM(G.act || 1)).catch(()=>{});
-  } else {
-    startBGM(G.act || 1);
-  }
+  unlockAudio();
+  startBGM(G.act || 1);
   removeAudioListeners();
 }
 function removeAudioListeners() {
@@ -2649,7 +2663,9 @@ function showTutorial(){
   document.getElementById('tutorial').classList.add('open');
   const el=document.getElementById('tutorial');
   function advance(e){
-    e.preventDefault();tutStep++;
+    e.preventDefault();
+    unlockAudio(); // iOS Safari: unlock on first user gesture
+    tutStep++;
     if(tutStep>=TUT_STEPS.length){
       el.classList.remove('open');
       el.removeEventListener('click',advance);
@@ -2670,6 +2686,8 @@ function renderTutStep(){
 
 // ===== INIT =====
 function startGame(){
+  unlockAudio();
+  removeAudioListeners(); // tutorial handled audio init, remove redundant listeners
   setupAmbientScare();
   setupDripLoop();
   goRoom('r1');
