@@ -271,10 +271,11 @@ function saveRankingOnline(timeMs,name){
   fbDb.ref('rankings').push({time:timeMs,name:name||'???',date:new Date().toLocaleDateString('ko-KR'),timestamp:Date.now()});
 }
 function loadRankingsOnline(callback,fallback){
-  fbDb.ref('rankings').orderByChild('time').limitToFirst(10).once('value').then(snap=>{
+  fbDb.ref('rankings').once('value').then(snap=>{
     const list=[];
     snap.forEach(child=>list.push(child.val()));
-    callback(list);
+    list.sort((a,b)=>a.time-b.time);
+    callback(list.slice(0,10));
   }).catch(err=>{
     console.warn('Firebase ranking load failed:',err);
     if(fallback)fallback();
