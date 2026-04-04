@@ -1714,91 +1714,172 @@ function startEscapeAnim(){
   const cv=document.getElementById('escape-anim');
   const c=cv.getContext('2d');
   const W=280,H=60;
-  let px=-10,frame=0,t=0;
-  const obstacles=[80,140,200,250];
-  // pixel char: 8x12 running figure
-  function drawChar(x,y,f){
-    c.fillStyle='#cc9944';
-    // head
-    c.fillRect(x+2,y,4,3);
-    // body
-    c.fillRect(x+2,y+3,4,4);
-    // arms
-    if(f%2===0){c.fillRect(x,y+4,2,2);c.fillRect(x+6,y+3,2,2)}
-    else{c.fillRect(x,y+3,2,2);c.fillRect(x+6,y+4,2,2)}
-    // legs
-    if(f%2===0){c.fillRect(x+2,y+7,2,3);c.fillRect(x+5,y+7,2,2)}
-    else{c.fillRect(x+5,y+7,2,3);c.fillRect(x+2,y+7,2,2)}
-  }
-  function drawDoor(x){
-    c.fillStyle='#553322';c.fillRect(x,H-28,12,22);
-    c.fillStyle='#442211';c.fillRect(x+1,H-27,10,20);
-    c.fillStyle='#cc9944';c.fillRect(x+8,H-17,2,2);
-  }
-  function drawWall(x){
-    c.fillStyle='#222';
-    for(let j=0;j<3;j++){
-      for(let i=0;i<2;i++){
-        c.fillRect(x+i*8+(j%2)*4,H-26+j*8,7,7);
-      }
+  let t=0,jumpT=-1;
+  const GROUND=H-6;
+  const CHAR_X=50;
+  const SPEED=1.5;
+  // obstacles: type, x offset (will scroll)
+  const OBS_TYPES=['rock','tree','ghost','tombstone','bat','puddle','skull','monster'];
+  let obstacles=[];
+  function spawnObstacles(){
+    obstacles=[];
+    for(let i=0;i<20;i++){
+      obstacles.push({type:OBS_TYPES[i%OBS_TYPES.length],x:200+i*120+Math.random()*60});
     }
   }
+  spawnObstacles();
+
+  function drawChar(x,y,f){
+    c.fillStyle='#cc9944';
+    c.fillRect(x+2,y,4,3);// head
+    c.fillStyle='#aa7733';
+    c.fillRect(x+2,y+3,4,5);// body
+    c.fillStyle='#cc9944';
+    // arms swing
+    if(f%2===0){c.fillRect(x,y+4,2,2);c.fillRect(x+6,y+3,2,2)}
+    else{c.fillRect(x,y+3,2,2);c.fillRect(x+6,y+5,2,2)}
+    // legs
+    c.fillStyle='#886633';
+    if(f%2===0){c.fillRect(x+2,y+8,2,3);c.fillRect(x+5,y+8,2,2)}
+    else{c.fillRect(x+5,y+8,2,3);c.fillRect(x+2,y+8,2,2)}
+    // eyes
+    c.fillStyle='#fff';c.fillRect(x+2,y+1,1,1);c.fillRect(x+5,y+1,1,1);
+  }
+  function drawRock(x){
+    c.fillStyle='#3a3a3a';
+    c.fillRect(x,GROUND-5,8,5);
+    c.fillStyle='#444';
+    c.fillRect(x+1,GROUND-7,6,3);
+    c.fillStyle='#333';
+    c.fillRect(x+2,GROUND-4,2,1);
+  }
   function drawTree(x){
+    c.fillStyle='#332211';c.fillRect(x+4,GROUND-14,2,14);
     c.fillStyle='#1a3a1a';
-    c.fillRect(x+3,H-24,4,8);
-    c.fillRect(x,H-30,10,8);
-    c.fillRect(x+2,H-34,6,6);
-    c.fillStyle='#332211';
-    c.fillRect(x+4,H-16,2,10);
+    c.fillRect(x+1,GROUND-22,8,10);
+    c.fillRect(x+3,GROUND-26,4,6);
+    c.fillStyle='#143014';
+    c.fillRect(x+2,GROUND-20,6,6);
+  }
+  function drawGhost(x,t){
+    const bob=Math.sin(t*0.08)*3;
+    c.fillStyle='rgba(180,180,220,0.6)';
+    c.fillRect(x+2,GROUND-16+bob,6,8);
+    c.fillRect(x,GROUND-12+bob,10,6);
+    c.fillRect(x+1,GROUND-8+bob,2,3);
+    c.fillRect(x+5,GROUND-8+bob,2,3);
+    c.fillRect(x+3,GROUND-6+bob,2,3);
+    // eyes
+    c.fillStyle='#220000';
+    c.fillRect(x+3,GROUND-14+bob,2,2);
+    c.fillRect(x+6,GROUND-14+bob,2,2);
+  }
+  function drawTombstone(x){
+    c.fillStyle='#555';
+    c.fillRect(x+1,GROUND-12,8,12);
+    c.fillRect(x+3,GROUND-14,4,3);
+    c.fillStyle='#444';
+    c.fillRect(x+3,GROUND-9,4,1);
+    c.fillRect(x+4,GROUND-7,2,1);
+  }
+  function drawBat(x,t){
+    const bob=Math.sin(t*0.12)*4;
+    const wing=Math.sin(t*0.15)>0;
+    c.fillStyle='#553355';
+    c.fillRect(x+3,GROUND-22+bob,4,3);// body
+    if(wing){c.fillRect(x,GROUND-24+bob,3,2);c.fillRect(x+7,GROUND-24+bob,3,2)}
+    else{c.fillRect(x,GROUND-21+bob,3,2);c.fillRect(x+7,GROUND-21+bob,3,2)}
+    c.fillStyle='#ff3333';c.fillRect(x+4,GROUND-21+bob,1,1);c.fillRect(x+6,GROUND-21+bob,1,1);
+  }
+  function drawPuddle(x){
+    c.fillStyle='#1a2844';c.fillRect(x,GROUND-2,12,2);
+    c.fillStyle='#223355';c.fillRect(x+2,GROUND-3,8,1);
+  }
+  function drawSkull(x){
+    c.fillStyle='#aaa';
+    c.fillRect(x+1,GROUND-8,6,6);
+    c.fillRect(x+2,GROUND-9,4,2);
+    c.fillStyle='#333';
+    c.fillRect(x+2,GROUND-6,2,2);c.fillRect(x+5,GROUND-6,2,2);
+    c.fillStyle='#555';
+    c.fillRect(x+3,GROUND-3,3,1);
+  }
+  function drawMonster(x,t){
+    const bob=Math.sin(t*0.06)*2;
+    c.fillStyle='#662222';
+    c.fillRect(x+1,GROUND-18+bob,8,12);
+    c.fillRect(x+3,GROUND-20+bob,4,3);
+    // horns
+    c.fillStyle='#441111';
+    c.fillRect(x+2,GROUND-22+bob,2,3);c.fillRect(x+6,GROUND-22+bob,2,3);
+    // eyes
+    c.fillStyle='#ff4444';
+    c.fillRect(x+3,GROUND-18+bob,2,2);c.fillRect(x+6,GROUND-18+bob,2,2);
+    // claws
+    c.fillStyle='#883333';
+    c.fillRect(x-1,GROUND-12+bob,2,3);c.fillRect(x+9,GROUND-12+bob,2,3);
+  }
+  function drawObs(o,t){
+    const type=o.type;
+    if(type==='rock')drawRock(o.sx);
+    else if(type==='tree')drawTree(o.sx);
+    else if(type==='ghost')drawGhost(o.sx,t);
+    else if(type==='tombstone')drawTombstone(o.sx);
+    else if(type==='bat')drawBat(o.sx,t);
+    else if(type==='puddle')drawPuddle(o.sx);
+    else if(type==='skull')drawSkull(o.sx);
+    else if(type==='monster')drawMonster(o.sx,t);
   }
   function drawMoon(){
     c.fillStyle='#888866';
-    c.beginPath();c.arc(240,12,8,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(250,12,8,0,Math.PI*2);c.fill();
     c.fillStyle='#0a0008';
-    c.beginPath();c.arc(243,10,7,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc(253,10,7,0,Math.PI*2);c.fill();
+  }
+  function getCharY(){
+    if(jumpT<0)return GROUND-12;
+    const jt=t-jumpT;
+    if(jt>30){jumpT=-1;return GROUND-12}
+    const h=Math.sin(jt/30*Math.PI)*18;
+    return GROUND-12-h;
   }
   function loop(){
     t++;
+    const scroll=t*SPEED;
     c.fillStyle='#0a0008';c.fillRect(0,0,W,H);
     // ground
-    c.fillStyle='#1a1218';c.fillRect(0,H-6,W,6);
-    // ground detail
+    c.fillStyle='#1a1218';c.fillRect(0,GROUND,W,6);
     c.fillStyle='#221820';
-    for(let i=0;i<28;i++){c.fillRect(i*10+((t>>2)%10),H-3,4,1)}
-    // stars
+    for(let i=0;i<30;i++){c.fillRect(((i*10-scroll*0.5)%300+300)%300,GROUND+3,4,1)}
+    // stars (parallax)
     c.fillStyle='#444';
-    c.fillRect(30,5,1,1);c.fillRect(90,10,1,1);c.fillRect(150,3,1,1);c.fillRect(200,8,1,1);c.fillRect(260,6,1,1);
+    for(let i=0;i<8;i++){c.fillRect(((40+i*37-scroll*0.05)%W+W)%W,4+i*3%12,1,1)}
     drawMoon();
-    // scene elements scroll
-    const scroll=t*1.2;
-    // walls (hospital)
-    if(scroll<120){drawWall(40-scroll*0.3);drawWall(60-scroll*0.3);drawDoor(80-scroll*0.3)}
-    // trees (outside)
-    drawTree(160-scroll*0.3);drawTree(220-scroll*0.3);drawTree(300-scroll*0.3);
+    // obstacles
+    let nearObs=false;
+    for(const o of obstacles){
+      o.sx=o.x-scroll;
+      if(o.sx>-20&&o.sx<W+20) drawObs(o,t);
+      // auto jump when obstacle is near
+      if(o.sx>CHAR_X-5&&o.sx<CHAR_X+30&&jumpT<0){jumpT=t;nearObs=true}
+    }
+    // respawn obstacles if all passed
+    const maxX=Math.max(...obstacles.map(o=>o.x));
+    if(maxX-scroll<-20) spawnObstacles();
     // character
-    const jumping=(t%60)<15;
-    const charY=jumping?H-20:H-18;
-    if(frame%4===0) frame++;
-    drawChar(px,charY,t>>2);
-    // move character
-    if(px<130) px+=1.2;
-    // freedom text at end
-    if(px>=120){
-      c.fillStyle='#cc9944';c.font='8px monospace';c.textAlign='center';
-      const alpha=Math.min(1,(px-120)/10);
-      c.globalAlpha=alpha;
-      c.fillText('FREEDOM',220,35);
-      c.globalAlpha=1;
+    const charY=getCharY();
+    drawChar(CHAR_X,charY,t>>3);
+    // dust particles when running on ground
+    if(jumpT<0&&t%6===0){
+      c.fillStyle='#332828';
+      c.fillRect(CHAR_X-2,GROUND-2,2,1);
+      c.fillRect(CHAR_X-4,GROUND-1,1,1);
     }
-    if(px<140) escAnimId=requestAnimationFrame(loop);
-    else{
-      // loop
-      px=-10;t=0;
-      escAnimId=requestAnimationFrame(loop);
-    }
+    escAnimId=requestAnimationFrame(loop);
   }
   if(escAnimId)cancelAnimationFrame(escAnimId);
-  px=-10;t=0;
+  t=0;jumpT=-1;
+  spawnObstacles();
   escAnimId=requestAnimationFrame(loop);
 }
 function stopEscapeAnim(){
