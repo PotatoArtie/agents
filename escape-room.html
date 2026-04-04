@@ -201,11 +201,6 @@ function ensureAudio() {
   }
 }
 
-// Audio unlock — create context + resume in user gesture (required by all mobile browsers)
-function unlockAudio() {
-  ensureAudio();
-}
-
 function sfxPickup() {
   ensureAudio();
   const o = audioCtx.createOscillator();
@@ -614,6 +609,36 @@ function sfxBadEnd() {
   o2.start(); o2.stop(t + 1.2);
 }
 
+function sfxEat() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Crunching + satisfied chime
+  for (let i = 0; i < 4; i++) {
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.06, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let j = 0; j < d.length; j++) d[j] = (Math.random() * 2 - 1) * 0.08;
+    const src = audioCtx.createBufferSource();
+    const flt = audioCtx.createBiquadFilter();
+    const g = audioCtx.createGain();
+    src.buffer = buf; flt.type = 'bandpass'; flt.frequency.value = 800 + i * 200; flt.Q.value = 2;
+    src.connect(flt); flt.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.1, t + i * 0.08);
+    g.gain.linearRampToValueAtTime(0, t + i * 0.08 + 0.06);
+    src.start(t + i * 0.08);
+  }
+  // Happy chime after crunch
+  [523, 659, 784].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine'; o.frequency.value = f;
+    const st = t + 0.35 + i * 0.1;
+    g.gain.setValueAtTime(0.06, st);
+    g.gain.linearRampToValueAtTime(0, st + 0.2);
+    o.start(st); o.stop(st + 0.2);
+  });
+}
+
 // ===== DYNAMIC BACKGROUND MUSIC =====
 let bgmNodes = [];
 let bgmMaster = null;
@@ -627,6 +652,7 @@ function stopAudioNodes(arr) {
 function stopBGM() {
   stopAudioNodes(bgmNodes); bgmNodes = []; bgmMaster = null;
   stopAudioNodes(ambNodes); ambNodes = []; currentAmbRoom = '';
+  bgmStarted = false; currentBgmAct = 0;
 }
 
 function makeDrone(master, freq, type, detune, filterFreq, vol) {
@@ -642,11 +668,10 @@ function makeDrone(master, freq, type, detune, filterFreq, vol) {
 }
 
 function startBGM(act) {
-  ensureAudio();
   if (!audioCtx) return;
   act = act || 1;
-  if (currentBgmAct === act && bgmNodes.length > 0) return;
-  stopBGM();
+  if (bgmStarted && currentBgmAct === act) return;
+  if (bgmStarted) stopBGM();
   currentBgmAct = act;
   bgmStarted = true;
   bgmMaster = audioCtx.createGain();
@@ -842,19 +867,15 @@ function updateRoomAmbience(room) {
   // r1, r2, r3, r8 — no special ambience (BGM only)
 }
 
-// Audio init on first user gesture — always force-rebuild BGM
+// Audio init — identical pattern to original working version
 function initAudioOnInteraction() {
   ensureAudio();
-  // Force fresh BGM: nodes created on suspended context won't play on iOS Safari
-  stopBGM();
   startBGM(G.act || 1);
-  document.removeEventListener('click', initAudioOnInteraction, true);
-  document.removeEventListener('touchstart', initAudioOnInteraction, true);
-  document.removeEventListener('touchend', initAudioOnInteraction, true);
+  document.removeEventListener('click', initAudioOnInteraction);
+  document.removeEventListener('touchstart', initAudioOnInteraction);
 }
-document.addEventListener('click', initAudioOnInteraction, true);
-document.addEventListener('touchstart', initAudioOnInteraction, true);
-document.addEventListener('touchend', initAudioOnInteraction, true);
+document.addEventListener('click', initAudioOnInteraction);
+document.addEventListener('touchstart', initAudioOnInteraction);
 
 // ===== GAME STATE =====
 const G = {
@@ -871,7 +892,8 @@ const G = {
     r8_shelf:false,r8_safe2:false,
     r9_gate:false,
     r10_boiler:false,r10_steam:false,
-    r11_door:false,badge_taken:false}
+    r11_door:false,badge_taken:false,
+    snack_r1:false,snack_r3:false,snack_r6:false,snack_r10:false}
 };
 
 const ITEMS = {
@@ -935,6 +957,7 @@ const zones = {
   r1:[
     {id:'bed',x:4,y:30,w:58,h:28,tip:'낡은 침대'},
     {id:'drawer',x:4,y:58,w:18,h:14,tip:'서랍장'},
+    {id:'snack_r1',x:22,y:60,w:10,h:8,tip:'오래된 비스킷'},
     {id:'window',x:111,y:2,w:44,h:56,tip:'창문'},
     {id:'hand',x:98,y:16,w:22,h:34,tip:'핏자국'}
   ],
@@ -946,7 +969,8 @@ const zones = {
   r3:[
     {id:'r3_desk',x:60,y:30,w:50,h:30,tip:'책상'},
     {id:'r3_cabinet',x:4,y:10,w:30,h:50,tip:'약품 캐비닛'},
-    {id:'r3_doc',x:120,y:14,w:30,h:20,tip:'벽에 붙은 서류'}
+    {id:'r3_doc',x:120,y:14,w:30,h:20,tip:'벽에 붙은 서류'},
+    {id:'snack_r3',x:90,y:44,w:10,h:8,tip:'초콜릿바'}
   ],
   r4:[
     {id:'r4_monitor',x:10,y:10,w:80,h:40,tip:'감시 모니터'},
@@ -961,7 +985,8 @@ const zones = {
   r6:[
     {id:'r6_corpse',x:80,y:40,w:40,h:30,tip:'쓰러진 무언가'},
     {id:'r6_pipe',x:10,y:4,w:140,h:10,tip:'천장 파이프'},
-    {id:'r6_doc',x:130,y:50,w:20,h:20,tip:'바닥의 서류'}
+    {id:'r6_doc',x:130,y:50,w:20,h:20,tip:'바닥의 서류'},
+    {id:'snack_r6',x:60,y:54,w:12,h:10,tip:'에너지바'}
   ],
   r7:[
     {id:'r7_table',x:30,y:25,w:60,h:35,tip:'실험 테이블'},
@@ -981,7 +1006,8 @@ const zones = {
   r10:[
     {id:'r10_boiler',x:10,y:8,w:60,h:60,tip:'보일러'},
     {id:'r10_panel',x:90,y:20,w:30,h:30,tip:'제어 패널'},
-    {id:'r10_shelf',x:130,y:40,w:24,h:30,tip:'선반'}
+    {id:'r10_shelf',x:130,y:40,w:24,h:30,tip:'선반'},
+    {id:'snack_r10',x:136,y:54,w:10,h:8,tip:'생수병'}
   ],
   r11:[
     {id:'r11_door',x:40,y:2,w:80,h:76,tip:'비상문'},
@@ -1424,8 +1450,25 @@ goRoom=function(id){
   if(zoneCount>0) label.textContent=ROOM_LABELS[id]+' ('+zoneCount+'개 조사 가능)';
 };
 
+// ===== SNACK HANDLER =====
+const SNACKS={
+  snack_r1:{name:'오래된 비스킷',san:10,msg:'서랍장 위에 있던 비스킷을 먹었다. 눅눅하지만... 조금 진정이 된다.'},
+  snack_r3:{name:'초콜릿바',san:12,msg:'책상 위의 초콜릿바를 먹었다. 달콤함이 공포를 잠시 잊게 해준다.'},
+  snack_r6:{name:'에너지바',san:15,msg:'바닥에서 주운 에너지바를 먹었다. 기력이 조금 회복된다.'},
+  snack_r10:{name:'생수',san:10,msg:'선반의 생수를 마셨다. 차가운 물이 정신을 맑게 해준다.'}
+};
+
 // ===== HANDLE CLICK =====
 function handleClick(id){
+  // Snack items (any room)
+  if(SNACKS[id]){
+    const flag='snack_'+G.room.replace('r','r');
+    if(!G.flags[id]){
+      G.flags[id]=true;sfxEat();flash('#002244');changeSanity(SNACKS[id].san);
+      setMsg(SNACKS[id].msg+' [정신력 +'+SNACKS[id].san+']','item');
+    } else setMsg('이미 먹었다.');
+    return;
+  }
   if(G.room==='r1'){
     if(id==='bed'){
       if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();sfxPickup();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]','item')}
@@ -1863,6 +1906,8 @@ function drawRoom1(fv){
   // Dresser
   p(5,60,16,10,'#3a2818');p(6,61,14,3,'#442d1c');p(6,65,14,3,'#442d1c');
   p(12,62,2,1,'#C8A820');p(12,66,2,1,'#C8A820');
+  // Biscuit on dresser
+  if(!G.flags.snack_r1){p(23,58,8,4,'#C8A860');p(24,59,6,2,'#B09050')}
 
   // Blood handprint on wall
   p(106,22,3,10,'#5a0000');p(110,20,3,12,'#5a0000');p(114,22,3,10,'#5a0000');
@@ -2013,6 +2058,8 @@ function drawRoom3(fv,t){
   p(66,60,18,7,'#3a2818');p(74,63,2,1,'#C8A820');
   // Items on desk
   p(88,46,6,3,'#555');p(96,44,4,5,'#2a4a5a');
+  // Chocolate bar
+  if(!G.flags.snack_r3){p(91,43,8,3,'#5a2a10');p(92,43,6,2,'#7a3a18')}
 
   // Document on wall (right)
   p(122,16,26,16,'#C8B87C');
@@ -2214,6 +2261,9 @@ function drawRoom6(fv,t){
   ctx.save();ctx.globalAlpha=0.6;
   p(134,54,14,1,'#A09060');p(134,57,12,1,'#A09060');p(134,60,14,1,'#A09060');
   ctx.restore();
+
+  // Energy bar on floor
+  if(!G.flags.snack_r6){p(62,55,10,4,'#88aa22');p(63,56,8,2,'#aacc44')}
 
   // Water puddles
   ctx.save();ctx.globalAlpha=0.15;
@@ -2479,6 +2529,8 @@ function drawRoom10(fv,t){
   // Items on shelf
   if(!G.flags.badge_taken) p(138,44,8,8,'#8a7020');
   p(136,54,6,8,'#333');p(144,55,4,7,'#444');
+  // Water bottle
+  if(!G.flags.snack_r10){p(137,55,4,7,'#4488cc');p(138,53,2,3,'#88bbee')}
 
   drawTouchFeedback();
 }
