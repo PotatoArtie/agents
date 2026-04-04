@@ -20,6 +20,7 @@ body{display:flex;justify-content:center;align-items:flex-start;padding-top:env(
 .res-label{color:#555;font-size:clamp(6px,1.5vw,7px);font-family:inherit}
 .res-bar-bg{width:60px;height:8px;background:#111;border:1px solid #222;border-radius:2px;overflow:hidden}
 .res-bar-fill{height:100%;transition:width 0.3s,background 0.3s}
+.res-num{color:#555;font-size:clamp(6px,1.5vw,7px);font-family:inherit;min-width:18px;text-align:right}
 .scene-wrapper{position:relative;width:640px;height:360px;overflow:hidden;cursor:crosshair;touch-action:none;background:#000}
 canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image-rendering:crisp-edges}
 .crt{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:20}
@@ -35,7 +36,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .code-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#040104;border:1px solid #380000;padding:12px;z-index:40;width:min(200px,75vw);border-radius:4px;max-height:90%;overflow-y:auto}
 .code-modal.open{display:block}
 .code-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:6px}
-.num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(12px,3.5vw,14px);padding:clamp(6px,2vw,10px);cursor:pointer;min-height:36px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
+.num-btn{background:#0e0e0e;border:1px solid #1e1e1e;color:#777;font-family:inherit;font-size:clamp(12px,3.5vw,14px);padding:clamp(6px,2vw,10px);cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent;text-align:center;transition:background 0.15s}
 .code-title{color:#6b0000;font-size:clamp(7px,2vw,9px);text-align:center;margin-bottom:8px;font-family:inherit}
 .code-display{background:#0a0a0a;border:1px solid #1e0000;color:#8a6060;font-family:inherit;font-size:clamp(12px,3.5vw,16px);text-align:center;padding:6px;margin-bottom:8px;letter-spacing:4px;min-height:30px;display:flex;align-items:center;justify-content:center}
 .num-btn:hover{background:#1a1a1a}
@@ -49,10 +50,10 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .code-led{height:3px;margin-bottom:8px;background:#1a0000;transition:background 0.3s}
 .code-led.correct{background:#004400}
 .code-led.wrong{background:#880000}
-.doc-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a0808;border:1px solid #3a2020;padding:16px;z-index:40;width:min(280px,85vw);border-radius:4px;max-height:80%;overflow-y:auto}
+.doc-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0c0a0a;border:1px solid #3a2020;padding:16px;z-index:40;width:min(280px,85vw);border-radius:4px;max-height:80%;overflow-y:auto}
 .doc-modal.open{display:block}
-.doc-title{color:#8a6040;font-size:clamp(8px,2.2vw,10px);text-align:center;margin-bottom:12px;font-family:inherit;border-bottom:1px solid #2a1a1a;padding-bottom:8px}
-.doc-body{color:#7a7070;font-size:clamp(8px,2vw,9px);line-height:2;font-family:inherit;margin-bottom:12px}
+.doc-title{color:#bb8855;font-size:clamp(9px,2.5vw,11px);text-align:center;margin-bottom:12px;font-family:inherit;border-bottom:1px solid #2a1a1a;padding-bottom:8px}
+.doc-body{color:#a09898;font-size:clamp(9px,2.5vw,11px);line-height:2;font-family:inherit;margin-bottom:12px;white-space:pre-line}
 .doc-close{display:block;width:100%;background:#1a0808;border:1px solid #2a1010;color:#6b3030;font-family:inherit;font-size:clamp(8px,2vw,9px);padding:8px;cursor:pointer;text-align:center}
 .dial-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#080808;border:1px solid #333;padding:16px;z-index:40;width:min(220px,75vw);border-radius:4px}
 .dial-modal.open{display:block}
@@ -62,6 +63,11 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .dial-btn{background:#111;border:1px solid #333;color:#888;font-family:inherit;font-size:clamp(10px,3vw,14px);padding:10px 18px;cursor:pointer;min-width:44px;min-height:44px}
 .dial-btn:hover{background:#222}
 .dial-btn:active{background:#333}
+.tutorial{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.85);z-index:48;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;cursor:pointer}
+.tutorial.open{display:flex}
+.tut-text{color:#aaa;font-family:inherit;font-size:clamp(9px,2.5vw,11px);line-height:2.4;margin-bottom:16px}
+.tut-step{color:#555;font-family:inherit;font-size:clamp(7px,1.8vw,8px)}
+.tut-icon{font-size:clamp(24px,6vw,32px);margin-bottom:12px}
 .act-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.95);z-index:45;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
 .act-overlay.open{display:flex}
 .act-title{color:#6b0000;font-family:inherit;font-size:clamp(12px,3.5vw,16px);margin-bottom:16px;animation:blink 1.2s infinite}
@@ -73,15 +79,21 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 .win-end{color:#303030;font-family:inherit;font-size:clamp(9px,2.5vw,11px);margin-top:16px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 .message-box{background:#020102;border:1px solid #180810;border-top:none;padding:10px 14px;min-height:80px;display:flex;align-items:flex-start}
-.message-text{color:#8a8088;font-size:clamp(9px,2.5vw,11px);line-height:1.9;font-family:inherit}
+.message-box{position:relative}
+.message-text{color:#8a8088;font-size:clamp(9px,2.5vw,11px);line-height:1.9;font-family:inherit;transition:color 0.2s;flex:1}
+.msg-nav{display:flex;flex-direction:column;gap:2px;margin-left:6px;flex-shrink:0}
+.msg-nav-btn{background:transparent;border:1px solid #1a1a1a;color:#444;font-size:8px;width:20px;height:20px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.message-text.msg-item{color:#6a9a6a}
+.message-text.msg-hint{color:#9a9a6a}
 .inventory-bar{background:#010101;border:1px solid #160810;border-top:none;display:flex;align-items:center;padding:8px 10px;gap:8px;flex-wrap:nowrap;border-radius:0 0 8px 8px}
 .inv-label{color:#3a2030;font-size:clamp(7px,1.8vw,9px);font-family:inherit;flex-shrink:0}
-.inv-slots{display:flex;gap:4px;flex:1;justify-content:flex-start}
-.inv-slot{width:clamp(44px,12vw,46px);height:clamp(44px,12vw,46px);border:1px solid #161616;background:#050505;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;transition:border-color 0.2s}
+.inv-slots{display:flex;gap:4px;flex:1;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.inv-slot{width:clamp(36px,10vw,46px);height:clamp(36px,10vw,46px);border:1px solid #161616;background:#050505;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;transition:border-color 0.2s}
 .inv-slot.selected{border-color:#7b0000;box-shadow:inset 0 0 8px rgba(120,0,0,0.4)}
 .inv-slot canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 .inv-slot .inv-tip{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);border:1px solid #250000;color:#8a7070;font-family:inherit;font-size:7px;padding:3px 6px;white-space:nowrap;display:none;z-index:60;pointer-events:none}
 .inv-slot:hover .inv-tip{display:block}
+.inv-sel-name{color:#7b4040;font-size:clamp(6px,1.6vw,8px);font-family:inherit;flex-shrink:0;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .landscape-mode .message-box{min-height:0;padding:6px 12px}
 .landscape-mode .title-bar{padding:4px 10px}
 .landscape-mode .inv-slot{width:36px;height:36px}
@@ -92,8 +104,8 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
   <div class="title-bar">
     <span class="title-text">&#9760; SAINT MERCY PSYCHIATRIC HOSPITAL &#9760;</span>
     <div class="resource-bars">
-      <div class="res-bar-wrap"><span class="res-label">SAN</span><div class="res-bar-bg"><div class="res-bar-fill" id="san-bar" style="width:100%;background:#3366aa"></div></div></div>
-      <div class="res-bar-wrap"><span class="res-label">BAT</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div></div>
+      <div class="res-bar-wrap"><span class="res-label">정신</span><div class="res-bar-bg"><div class="res-bar-fill" id="san-bar" style="width:100%;background:#3366aa"></div></div><span class="res-num" id="san-num">100</span></div>
+      <div class="res-bar-wrap"><span class="res-label">전지</span><div class="res-bar-bg"><div class="res-bar-fill" id="bat-bar" style="width:100%;background:#33aa44"></div></div><span class="res-num" id="bat-num">100</span></div>
     </div>
     <span class="room-num" id="room-num">ROOM 01</span>
   </div>
@@ -132,22 +144,34 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
       <div style="text-align:center;color:#555;font-size:7px;font-family:inherit" id="dial-step">1 / 3</div>
       <div style="margin-top:8px"><button class="doc-close" id="dial-cancel">취소</button></div>
     </div>
+    <div class="tutorial" id="tutorial">
+      <div class="tut-icon" id="tut-icon"></div>
+      <div class="tut-text" id="tut-text"></div>
+      <div class="tut-step" id="tut-step"></div>
+    </div>
     <div class="act-overlay" id="act-overlay">
       <div class="act-title" id="act-title"></div>
       <div class="act-desc" id="act-desc"></div>
+      <div style="color:#333;font-size:clamp(7px,1.8vw,8px);font-family:inherit;margin-top:20px">탭하여 계속</div>
     </div>
     <div class="win-screen" id="win-screen">
       <div class="win-title" id="win-title">&#9654; ESCAPE SUCCESSFUL &#9664;</div>
       <div class="win-text" id="win-text"></div>
       <div class="win-end" id="win-end">-- THE END --</div>
+      <button class="doc-close" id="btn-restart" style="margin-top:20px;max-width:180px;align-self:center">다시 시작</button>
     </div>
   </div>
   <div class="message-box">
     <div class="message-text" id="msg">눈을 떴다. 어디인지 모르겠다...</div>
+    <div class="msg-nav" id="msg-nav">
+      <button class="msg-nav-btn" id="msg-prev">▲</button>
+      <button class="msg-nav-btn" id="msg-next">▼</button>
+    </div>
   </div>
   <div class="inventory-bar">
     <span class="inv-label">아이템</span>
     <div class="inv-slots" id="inv-slots"></div>
+    <span class="inv-sel-name" id="inv-sel-name"></span>
   </div>
 </div>
 <script>
@@ -445,13 +469,13 @@ const NAV_ROUTES = {
   r1:[{label:'복도 →',to:'r2'}],
   r2:[{label:'← 병실',to:'r1'},{label:'의무실 →',to:'r3'},{label:'감시실 ↓',to:'r4'}],
   r3:[{label:'← 복도',to:'r2'}],
-  r4:[{label:'← 복도',to:'r2'},{label:'계단실 ↓',to:'r5',req:()=>G.flags.r4_powered}],
+  r4:[{label:'← 복도',to:'r2'},{label:'계단실 ↓',to:'r5',req:()=>G.flags.r4_powered,hint:'전력이 차단되어 있다. 퓨즈를 찾아 전력 패널에 설치해야 한다.'}],
   r5:[{label:'← 감시실',to:'r4'},{label:'지하복도 ↓',to:'r6'}],
   r6:[{label:'← 계단실',to:'r5'},{label:'실험실 →',to:'r7'},{label:'기록보관소 ↓',to:'r8'}],
   r7:[{label:'← 지하복도',to:'r6'}],
-  r8:[{label:'← 지하복도',to:'r6'},{label:'하수도 ↓',to:'r9',req:()=>G.flags.r8_safe2}],
-  r9:[{label:'← 기록보관소',to:'r8'},{label:'보일러실 →',to:'r10',req:()=>G.flags.r9_gate}],
-  r10:[{label:'← 하수도',to:'r9'},{label:'비상출구 →',to:'r11',req:()=>G.flags.r10_steam}],
+  r8:[{label:'← 지하복도',to:'r6'},{label:'하수도 ↓',to:'r9',req:()=>G.flags.r8_safe2,hint:'금고가 잠겨있다. 화학약품과 조합 공식으로 열어야 한다.'}],
+  r9:[{label:'← 기록보관소',to:'r8'},{label:'보일러실 →',to:'r10',req:()=>G.flags.r9_gate,hint:'철문이 잠겨있다. 밸브를 돌려 수문을 열어야 한다.'}],
+  r10:[{label:'← 하수도',to:'r9'},{label:'비상출구 →',to:'r11',req:()=>G.flags.r10_steam,hint:'증기가 통로를 막고 있다. 제어 패널에서 키카드로 증기를 차단해야 한다.'}],
   r11:[{label:'← 보일러실',to:'r10'}]
 };
 
@@ -517,7 +541,28 @@ let valveClicks = 0;
 
 function p(vx,vy,vw,vh,color){ctx.fillStyle=color;ctx.fillRect(vx*S,vy*S,vw*S,vh*S)}
 
-function setMsg(t){document.getElementById('msg').textContent=t}
+const msgHistory=[];
+let msgIdx=-1;
+function setMsg(t,type){
+  // 'ambient' type (scare) won't overwrite 'item' or 'hint' within 3 seconds
+  if(type==='ambient'&&G._lastMsgType&&(G._lastMsgType==='item'||G._lastMsgType==='hint')){
+    const elapsed=G.t-(G._lastMsgTime||0);
+    if(elapsed<3000)return;
+  }
+  const el=document.getElementById('msg');
+  el.textContent=t;
+  el.className='message-text'+(type==='item'?' msg-item':type==='hint'?' msg-hint':'');
+  msgHistory.push({text:t,type:type||''});
+  if(msgHistory.length>20)msgHistory.shift();
+  msgIdx=msgHistory.length-1;
+  G._lastMsgType=type||'';G._lastMsgTime=G.t;
+}
+document.getElementById('msg-prev').addEventListener('click',()=>{
+  if(msgIdx>0){msgIdx--;const m=msgHistory[msgIdx];const el=document.getElementById('msg');el.textContent=m.text;el.className='message-text'+(m.type==='item'?' msg-item':m.type==='hint'?' msg-hint':'');}
+});
+document.getElementById('msg-next').addEventListener('click',()=>{
+  if(msgIdx<msgHistory.length-1){msgIdx++;const m=msgHistory[msgIdx];const el=document.getElementById('msg');el.textContent=m.text;el.className='message-text'+(m.type==='item'?' msg-item':m.type==='hint'?' msg-hint':'');}
+});
 
 function flash(color){
   color=color||'#680000';
@@ -531,6 +576,7 @@ function changeSanity(amt){
   G.sanity=Math.max(0,Math.min(100,G.sanity+amt));
   const bar=document.getElementById('san-bar');
   bar.style.width=G.sanity+'%';
+  document.getElementById('san-num').textContent=G.sanity;
   if(G.sanity<=20) bar.style.background='#aa3333';
   else bar.style.background='#3366aa';
   if(G.sanity<=0&&!G.ended) gameOverSanity();
@@ -540,7 +586,8 @@ function changeBattery(amt){
   G.battery=Math.max(0,Math.min(100,G.battery+amt));
   const bar=document.getElementById('bat-bar');
   bar.style.width=G.battery+'%';
-  if(G.battery<=20) bar.style.background='#aaaa33';
+  document.getElementById('bat-num').textContent=G.battery;
+  if(G.battery<=20){bar.style.background='#aaaa33';if(G.battery===20)setMsg('배터리가 얼마 남지 않았다... 어두운 곳에서는 조심해야 한다.')}
   else bar.style.background='#33aa44';
 }
 
@@ -663,6 +710,8 @@ function updateInv(){
     }
     el.appendChild(slot);
   }
+  const selName=document.getElementById('inv-sel-name');
+  selName.textContent=G.sel&&ITEMS[G.sel]?ITEMS[G.sel].name:'';
 }
 
 function getVirtualCoords(cx,cy){
@@ -748,6 +797,12 @@ document.getElementById('dial-ok').addEventListener('click',()=>{
 document.getElementById('dial-cancel').addEventListener('click',()=>{closeDial();setMsg(ROOM_MSGS[G.room])});
 
 // ===== ACT TRANSITIONS =====
+let actTimer=null;
+function closeAct(){
+  if(actTimer)clearTimeout(actTimer);actTimer=null;
+  document.getElementById('act-overlay').classList.remove('open');
+  G.modalOpen=null;
+}
 function showActTitle(act){
   G.modalOpen='act';
   const titles={1:'Act 1: 감금',2:'Act 2: 진실',3:'Act 3: 탈출'};
@@ -755,10 +810,13 @@ function showActTitle(act){
   document.getElementById('act-title').textContent=titles[act]||'';
   document.getElementById('act-desc').textContent=descs[act]||'';
   document.getElementById('act-overlay').classList.add('open');
+  // 1초 후부터 탭 스킵 가능, 5초 자동 닫힘
   setTimeout(()=>{
-    document.getElementById('act-overlay').classList.remove('open');
-    G.modalOpen=null;
-  },2500);
+    function dismiss(){closeAct();el.removeEventListener('click',dismiss);el.removeEventListener('touchend',dismiss)}
+    const el=document.getElementById('act-overlay');
+    el.addEventListener('click',dismiss);el.addEventListener('touchend',dismiss);
+  },1000);
+  actTimer=setTimeout(closeAct,5000);
 }
 
 // ===== ENDING SYSTEM =====
@@ -785,26 +843,45 @@ function showEnding(){
   ws.classList.add('open');
 }
 
+function restartGame(){
+  document.getElementById('win-screen').classList.remove('open');
+  G.room='r1';G.inv=[];G.sel=null;G.t=0;G.pad=false;G.code='';
+  G.act=1;G.sanity=100;G.battery=100;G.docsRead=[];G.modalOpen=null;G.ended=false;
+  G.dialVal=0;G.dialSeq=[];G.dialTarget=[];
+  Object.keys(G.flags).forEach(k=>G.flags[k]=false);
+  valveClicks=0;
+  document.getElementById('san-bar').style.width='100%';
+  document.getElementById('san-bar').style.background='#3366aa';
+  document.getElementById('san-num').textContent='100';
+  document.getElementById('bat-bar').style.width='100%';
+  document.getElementById('bat-bar').style.background='#33aa44';
+  document.getElementById('bat-num').textContent='100';
+  closeCodePad();closeDoc();closeDial();
+  updateInv();goRoom('r1');showActTitle(1);
+  requestAnimationFrame(loop);
+}
+document.getElementById('btn-restart').addEventListener('click',restartGame);
+
 // ===== HANDLE CLICK =====
 function handleClick(id){
   if(G.room==='r1'){
     if(id==='bed'){
-      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();sfxPickup();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]')}
+      if(!G.flags.bed){G.flags.bed=true;addItem('key');flash();sfxPickup();setMsg('매트리스 아래에서 녹슨 열쇠를 발견했다! [녹슨 열쇠 획득]','item')}
       else setMsg('이미 뒤져봤다. 매트리스 아래에는 더 이상 없다.');
     } else if(id==='drawer'){
       setMsg('서랍을 당겨보니 잠겨있다. 자물쇠가 있지만 이 열쇠는 맞지 않는 것 같다.');
     } else if(id==='window'){
       setMsg('창살이 달린 창문이다. 달빛이 들어온다. 밖은 짙은 안개로 덮여있다. 탈출할 수 없다.');
     } else if(id==='hand'){
-      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();sfxPickup();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]")}
+      if(!G.flags.wall){G.flags.wall=true;addItem('note');flash();sfxPickup();setMsg("핏자국 뒤에 종이가 숨겨져 있었다. '내 번호를 기억해. 4 - 7 - 2 - 9' [피 묻은 메모 획득]",'item')}
       else setMsg('핏자국이다. 메모지는 이미 챙겼다.');
     }
   } else if(G.room==='r2'){
     if(id==='locker'){
       if(!G.flags.lock){
-        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();sfxPickup();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]')}
+        if(G.sel==='key'){G.flags.lock=true;removeItem('key');addItem('card');flash();sfxPickup();G.sel=null;setMsg('녹슨 열쇠로 사물함을 열었다! 직원 키카드가 있다. [직원 키카드 획득]','item')}
         else{
-          if(G.inv.includes('key')) setMsg('낡은 자물쇠가 달려있다. 인벤토리에서 열쇠를 선택한 후 이곳을 다시 클릭하세요.');
+          if(G.inv.includes('key')) setMsg('낡은 자물쇠가 달려있다. 인벤토리에서 열쇠를 선택한 후 이곳을 다시 클릭하세요.','hint');
           else setMsg('낡은 자물쇠가 달려있다. 맞는 열쇠가 있을 것 같다.');
         }
       } else setMsg('이미 열린 사물함이다. 텅 비어있다.');
@@ -1035,8 +1112,9 @@ function setupNav(){
     const locked=n.req&&!n.req();
     if(locked){
       b.classList.add('locked');
-      b.addEventListener('click',()=>{if(G.modalOpen)return;sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
-      b.addEventListener('touchend',e=>{e.preventDefault();if(G.modalOpen)return;sfxWrong();flash();setMsg('잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.')});
+      const hintMsg=n.hint||'잠겨있다. 먼저 다른 곳에서 해결책을 찾아야 한다.';
+      b.addEventListener('click',()=>{if(G.modalOpen)return;sfxWrong();flash();setMsg(hintMsg)});
+      b.addEventListener('touchend',e=>{e.preventDefault();if(G.modalOpen)return;sfxWrong();flash();setMsg(hintMsg)});
     } else {
       b.addEventListener('click',()=>{if(G.modalOpen)return;goRoom(n.to)});
       b.addEventListener('touchend',e=>{e.preventDefault();if(G.modalOpen)return;goRoom(n.to)});
@@ -1118,6 +1196,23 @@ function drawTouchFeedback(){
     ctx.save();ctx.globalAlpha=0.15;ctx.fillStyle='#ffffff';
     ctx.fillRect(z.x*S,z.y*S,z.w*S,z.h*S);ctx.restore();
   }
+}
+
+// ===== ZONE HINTS (subtle corner dots for interactive areas) =====
+const isTouchDevice='ontouchstart' in window;
+function drawZoneHints(){
+  const zs=zones[G.room]||[];
+  const alpha=isTouchDevice?0.18:0.10;
+  const pulse=0.5+Math.sin(G.t*0.003)*0.5; // 0~1 pulse
+  ctx.save();ctx.globalAlpha=alpha*0.5+alpha*0.5*pulse;ctx.fillStyle='#ffffff';
+  for(const z of zs){
+    // 4 corner dots
+    ctx.fillRect(z.x*S,z.y*S,S,S);
+    ctx.fillRect((z.x+z.w-1)*S,z.y*S,S,S);
+    ctx.fillRect(z.x*S,(z.y+z.h-1)*S,S,S);
+    ctx.fillRect((z.x+z.w-1)*S,(z.y+z.h-1)*S,S,S);
+  }
+  ctx.restore();
 }
 
 // ===== ROOM DRAWING FUNCTIONS =====
@@ -1493,7 +1588,7 @@ function drawRoom5(fv,t){
 
 function drawRoom6(fv,t){
   // DARK ROOM - dim everything
-  const dark=G.battery>0?0.3:0.08;
+  const dark=G.battery>0?0.3:0.15;
 
   // Floor
   p(0,72,160,18,'#060408');
@@ -1683,7 +1778,7 @@ function drawRoom8(fv,t){
 
 function drawRoom9(fv,t){
   // DARK ROOM
-  const dark=G.battery>0?0.28:0.06;
+  const dark=G.battery>0?0.28:0.15;
 
   // Floor - water
   p(0,72,160,18,'#060810');
@@ -1897,6 +1992,7 @@ function loop(timestamp){
   else if(G.room==='r10')drawRoom10(flickerVal,G.t);
   else if(G.room==='r11')drawRoom11(flickerVal,G.t);
 
+  drawZoneHints();
   requestAnimationFrame(loop);
 }
 
@@ -1935,7 +2031,7 @@ function setupAmbientScare(){
         ];
       }
       flash();sfxScare();changeSanity(-2);
-      setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)]),110);
+      setTimeout(()=>setMsg(scares[Math.floor(Math.random()*scares.length)],'ambient'),110);
     }
   },22000);
 }
@@ -1947,16 +2043,52 @@ function setupDripLoop() {
   }, 2800);
 }
 
+// ===== TUTORIAL =====
+const TUT_STEPS=[
+  {icon:'👆',text:'화면의 물체를 클릭/탭해서\n조사하세요',step:'1 / 3'},
+  {icon:'🎒',text:'아이템을 탭해 선택한 후\n물체에 사용하세요',step:'2 / 3'},
+  {icon:'🚪',text:'하단의 이동 버튼으로\n다른 방으로 이동하세요',step:'3 / 3'}
+];
+let tutStep=0;
+function showTutorial(){
+  if(localStorage.getItem('smp_tut_done'))return startGame();
+  tutStep=0;
+  renderTutStep();
+  document.getElementById('tutorial').classList.add('open');
+  const el=document.getElementById('tutorial');
+  function advance(e){
+    e.preventDefault();tutStep++;
+    if(tutStep>=TUT_STEPS.length){
+      el.classList.remove('open');
+      el.removeEventListener('click',advance);
+      el.removeEventListener('touchend',advance);
+      localStorage.setItem('smp_tut_done','1');
+      startGame();
+    } else renderTutStep();
+  }
+  el.addEventListener('click',advance);
+  el.addEventListener('touchend',advance);
+}
+function renderTutStep(){
+  const s=TUT_STEPS[tutStep];
+  document.getElementById('tut-icon').textContent=s.icon;
+  document.getElementById('tut-text').textContent=s.text;
+  document.getElementById('tut-step').textContent=s.step+' — 탭하여 계속';
+}
+
 // ===== INIT =====
-function init(){
-  setupNumpad();
-  setupCodePadEvents();
+function startGame(){
   setupAmbientScare();
   setupDripLoop();
-  resizeGame();
   goRoom('r1');
   showActTitle(1);
   requestAnimationFrame(loop);
+}
+function init(){
+  setupNumpad();
+  setupCodePadEvents();
+  resizeGame();
+  showTutorial();
 }
 init();
 </script>
