@@ -1714,10 +1714,13 @@ function startEscapeAnim(){
   const cv=document.getElementById('escape-anim');
   const c=cv.getContext('2d');
   const W=280,H=60;
-  let t=0,jumpT=-1;
+  let t=0,jumpT=-1,slashT=-1,homeReached=false,homeT=0;
   const GROUND=H-6;
   const CHAR_X=50;
   const SPEED=1.5;
+  const ENEMIES=['ghost','monster','bat'];
+  let slashFx=[];
+  const HOME_X=2800;
   // obstacles: type, x offset (will scroll)
   const OBS_TYPES=['rock','tree','ghost','tombstone','bat','puddle','skull','monster'];
   let obstacles=[];
@@ -1819,7 +1822,39 @@ function startEscapeAnim(){
     c.fillStyle='#883333';
     c.fillRect(x-1,GROUND-12+bob,2,3);c.fillRect(x+9,GROUND-12+bob,2,3);
   }
+  function drawSlashEffect(x,y,age){
+    const alpha=Math.max(0,1-age/15);
+    c.save();c.globalAlpha=alpha;
+    // slash arc
+    c.strokeStyle='#ffdd44';c.lineWidth=2;
+    c.beginPath();c.arc(x+12,y+4,12,-0.8-age*0.05,0.8+age*0.05);c.stroke();
+    // sparks
+    c.fillStyle='#ff8844';
+    for(let i=0;i<3;i++){
+      const sx=x+14+Math.cos(age*0.5+i*2)*age;
+      const sy=y+2+Math.sin(age*0.3+i*1.5)*age*0.8;
+      c.fillRect(sx,sy,1,1);
+    }
+    // 斬 text flash
+    if(age<8){
+      c.fillStyle='#ff4444';c.font='bold 7px monospace';c.textAlign='center';
+      c.fillText('斬',x+18,y-2);
+    }
+    c.restore();
+  }
+  function drawDeathParticles(x,y,age){
+    const alpha=Math.max(0,1-age/20);
+    c.save();c.globalAlpha=alpha;
+    for(let i=0;i<6;i++){
+      const px=x+5+Math.cos(i+age*0.2)*(age*1.5);
+      const py=y+5+Math.sin(i*1.2+age*0.15)*(age*1.2)-age*0.5;
+      c.fillStyle=i%2===0?'#ff4444':'#ff8844';
+      c.fillRect(px,py,2,2);
+    }
+    c.restore();
+  }
   function drawObs(o,t){
+    if(o.dead)return;
     const type=o.type;
     if(type==='rock')drawRock(o.sx);
     else if(type==='tree')drawTree(o.sx);
@@ -1835,6 +1870,35 @@ function startEscapeAnim(){
     c.beginPath();c.arc(250,12,8,0,Math.PI*2);c.fill();
     c.fillStyle='#0a0008';
     c.beginPath();c.arc(253,10,7,0,Math.PI*2);c.fill();
+  }
+  function drawHome(x){
+    // wall
+    c.fillStyle='#443322';c.fillRect(x,GROUND-24,24,24);
+    c.fillStyle='#553828';c.fillRect(x+1,GROUND-23,22,22);
+    // roof
+    c.fillStyle='#662222';
+    c.fillRect(x-2,GROUND-26,28,3);
+    c.fillRect(x+2,GROUND-30,20,5);
+    c.fillRect(x+6,GROUND-33,12,4);
+    // door
+    c.fillStyle='#332211';c.fillRect(x+8,GROUND-14,8,14);
+    c.fillStyle='#221100';c.fillRect(x+9,GROUND-13,6,12);
+    c.fillStyle='#cc9944';c.fillRect(x+13,GROUND-8,1,2);// knob
+    // window
+    c.fillStyle='#334466';c.fillRect(x+3,GROUND-20,5,5);
+    c.fillRect(x+16,GROUND-20,5,5);
+    // window glow
+    c.fillStyle='#556688';c.fillRect(x+4,GROUND-19,3,3);
+    c.fillRect(x+17,GROUND-19,3,3);
+    // chimney
+    c.fillStyle='#554433';c.fillRect(x+17,GROUND-37,4,5);
+    // smoke
+    c.fillStyle='rgba(100,100,100,0.4)';
+    c.fillRect(x+18,GROUND-40,2,2);
+    c.fillRect(x+17,GROUND-43,2,2);
+    c.fillRect(x+19,GROUND-46,2,2);
+    // welcome mat
+    c.fillStyle='#886644';c.fillRect(x+7,GROUND-1,10,1);
   }
   function getCharY(){
     if(jumpT<0)return GROUND-12;
@@ -1856,19 +1920,75 @@ function startEscapeAnim(){
     for(let i=0;i<8;i++){c.fillRect(((40+i*37-scroll*0.05)%W+W)%W,4+i*3%12,1,1)}
     drawMoon();
     // obstacles
-    let nearObs=false;
     for(const o of obstacles){
       o.sx=o.x-scroll;
       if(o.sx>-20&&o.sx<W+20) drawObs(o,t);
-      // auto jump when obstacle is near
-      if(o.sx>CHAR_X-5&&o.sx<CHAR_X+30&&jumpT<0){jumpT=t;nearObs=true}
+      if(o.dead)continue;
+      // detect near obstacle
+      if(o.sx>CHAR_X-5&&o.sx<CHAR_X+30){
+        if(ENEMIES.includes(o.type)){
+          // slash enemy
+          if(slashT<0||t-slashT>20){
+            slashT=t;
+            o.dead=true;
+            slashFx.push({x:o.sx,y:GROUND-16,t:t});
+          }
+        } else if(jumpT<0){
+          jumpT=t;
+        }
+      }
     }
-    // respawn obstacles if all passed
-    const maxX=Math.max(...obstacles.map(o=>o.x));
-    if(maxX-scroll<-20) spawnObstacles();
+    // draw slash & death effects
+    slashFx=slashFx.filter(fx=>{
+      const age=t-fx.t;
+      if(age>25)return false;
+      drawSlashEffect(fx.x,fx.y,age);
+      drawDeathParticles(fx.x,fx.y,age);
+      return true;
+    });
+    // draw home
+    const homeSx=HOME_X-scroll;
+    if(homeSx>-30&&homeSx<W+30) drawHome(homeSx);
+    // check home reached
+    if(homeSx<=CHAR_X+10&&!homeReached){
+      homeReached=true;homeT=t;
+    }
     // character
+    if(homeReached){
+      // walk into house then stop
+      const elapsed=t-homeT;
+      if(elapsed<30){
+        const cx=CHAR_X+elapsed*0.5;
+        drawChar(cx,GROUND-12,t>>3);
+      } else if(elapsed<50){
+        // fade character (entering door)
+        c.save();c.globalAlpha=Math.max(0,1-(elapsed-30)/20);
+        drawChar(CHAR_X+15,GROUND-12,0);
+        c.restore();
+      }
+      // "HOME" text
+      if(elapsed>40){
+        c.save();
+        c.globalAlpha=Math.min(1,(elapsed-40)/20);
+        c.fillStyle='#cc9944';c.font='8px monospace';c.textAlign='center';
+        c.fillText('HOME SWEET HOME',W/2,20);
+        c.restore();
+      }
+      if(elapsed<80) escAnimId=requestAnimationFrame(loop);
+      // stop after text fully shown
+      return;
+    }
     const charY=getCharY();
-    drawChar(CHAR_X,charY,t>>3);
+    const isSlashing=slashT>=0&&t-slashT<12;
+    if(isSlashing){
+      drawChar(CHAR_X,charY,t>>3);
+      // sword
+      c.fillStyle='#ddd';c.fillRect(CHAR_X+8,charY+2,8,1);
+      c.fillRect(CHAR_X+8,charY+3,6,1);
+      c.fillStyle='#cc9944';c.fillRect(CHAR_X+6,charY+2,2,3);// hilt
+    } else {
+      drawChar(CHAR_X,charY,t>>3);
+    }
     // dust particles when running on ground
     if(jumpT<0&&t%6===0){
       c.fillStyle='#332828';
@@ -1878,7 +1998,7 @@ function startEscapeAnim(){
     escAnimId=requestAnimationFrame(loop);
   }
   if(escAnimId)cancelAnimationFrame(escAnimId);
-  t=0;jumpT=-1;
+  t=0;jumpT=-1;homeReached=false;homeT=0;slashFx=[];
   spawnObstacles();
   escAnimId=requestAnimationFrame(loop);
 }
