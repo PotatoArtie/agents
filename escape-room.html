@@ -277,6 +277,7 @@ canvas#gc{display:block;width:640px;height:360px;image-rendering:pixelated;image
 </div>
 <div class="ranking-screen" id="ranking-screen">
   <div class="ranking-title">🏆 LEADERBOARD 🏆</div>
+  <canvas id="ranking-escape-anim" width="280" height="60" style="display:block;width:min(280px,85vw);height:60px;image-rendering:pixelated;image-rendering:crisp-edges;margin-bottom:16px;border:1px solid #2a1830;border-radius:4px"></canvas>
   <div class="ranking-list" id="ranking-list"></div>
   <button class="doc-close" id="btn-ranking-close" style="margin-top:16px;max-width:200px;font-size:clamp(11px,3vw,14px);padding:12px 20px;border:2px solid #5a3050;color:#cc99dd;background:#1a1028">닫기</button>
 </div>
@@ -1856,6 +1857,9 @@ function openRankingScreen() {
   listEl.innerHTML = '<div style="color:#666;font-family:inherit;font-size:10px">로딩 중...</div>';
   screen.classList.add('open');
 
+  // Start escape animation in ranking screen
+  startEscapeAnim('ranking-escape-anim');
+
   // Start 8-bit victory BGM
   startRankingBGM();
 
@@ -1870,6 +1874,7 @@ function openRankingScreen() {
 
 function closeRankingScreen() {
   document.getElementById('ranking-screen').classList.remove('open');
+  stopEscapeAnim();
   stopRankingBGM();
   // Restart game BGM if game is running
   if (!G.ended) startBGM(G.act || 1);
@@ -1880,8 +1885,8 @@ document.getElementById('btn-ranking-close').addEventListener('click', closeRank
 
 // ===== ESCAPE ANIMATION =====
 let escAnimId=null;
-function startEscapeAnim(){
-  const cv=document.getElementById('escape-anim');
+function startEscapeAnim(canvasId){
+  const cv=document.getElementById(canvasId||'escape-anim');
   const c=cv.getContext('2d');
   const W=280,H=60;
   let t=0,jumpT=-1,slashT=-1,homeReached=false,homeT=0;
